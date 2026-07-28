@@ -1,0 +1,12 @@
+# Integration test profile using local Docker Compose database
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/docshare
+    username: docshare
+    password: docshare
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: false
