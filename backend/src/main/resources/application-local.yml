@@ -1,0 +1,10 @@
+# Local-developer overrides. Safe to commit — no real secrets belong here,
+# only defaults that make `./gradlew bootRun` work against the Docker
+# Compose stack in ../infra without any extra setup.
+#
+# Real secrets (in any shared/deployed environment) come from environment
+# variables or a secrets manager — never from a committed YAML file.
+
+logging:
+  level:
+    com.docshare.backend: DEBUG
