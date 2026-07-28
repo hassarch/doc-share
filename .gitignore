@@ -1,0 +1,47 @@
+# ==== Java / Gradle / Maven (backend/) ====
+backend/target/
+backend/build/
+backend/out/
+!backend/gradle/wrapper/gradle-wrapper.jar
+backend/.gradle/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# ==== Next.js / Node (frontend/) ====
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/coverage/
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# ==== Infra (infra/) ====
+infra/volumes/
+infra/*.local.yml
+
+# ==== Shared: env / secrets — never commit real secrets ====
+.env
+.env.local
+*.env
+!.env.example
+!**/.env.example
+
+# ==== Shared: OS ====
+.DS_Store
+Thumbs.db
+
+# ==== Shared: IDE ====
+.idea/
+*.iml
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+*.launch
+
+# ==== Shared: logs ====
+*.log
+logs/
+
+# ==== Testcontainers ====
+.testcontainers.properties
