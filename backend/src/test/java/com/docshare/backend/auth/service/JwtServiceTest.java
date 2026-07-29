@@ -1,70 +1,49 @@
 package com.docshare.backend.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.jsonwebtoken.Claims;
+import com.docshare.backend.config.JwtProperties;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit test for JWT generation and validation. Uses a fixed secret and TTL for deterministic
- * testing.
- */
 class JwtServiceTest {
 
   private JwtService jwtService;
-  private static final String TEST_SECRET = "test-secret-key-for-jwt-signing-minimum-256-bits-required-here";
-  private static final long TEST_TTL_MINUTES = 15;
 
   @BeforeEach
   void setUp() {
-    jwtService = new JwtService(TEST_SECRET, TEST_TTL_MINUTES);
+    JwtProperties properties = new JwtProperties();
+    properties.setSecret("test-only-secret-key-must-be-at-least-32-bytes-long-for-hs256");
+    properties.setAccessTokenTtlMinutes(15);
+    properties.setRefreshTokenTtlDays(7);
+    jwtService = new JwtService(properties);
   }
 
   @Test
-  void generatesValidAccessToken() {
+  void issuedTokenValidatesBackToTheSameUserId() {
     UUID userId = UUID.randomUUID();
-    String email = "test@docshare.local";
 
-    String token = jwtService.generateAccessToken(userId, email);
+    String token = jwtService.issueAccessToken(userId, "person@docshare.local");
+    UUID resolved = jwtService.validateAndGetUserId(token);
 
-    assertThat(token).isNotNull().isNotEmpty();
+    assertThat(resolved).isEqualTo(userId);
   }
 
   @Test
-  void validatesAndExtractsClaimsFromValidToken() {
+  void tamperedTokenFailsValidation() {
     UUID userId = UUID.randomUUID();
-    String email = "test@docshare.local";
+    String token = jwtService.issueAccessToken(userId, "person@docshare.local");
+    String tampered = token.substring(0, token.length() - 1) + (token.endsWith("a") ? "b" : "a");
 
-    String token = jwtService.generateAccessToken(userId, email);
-    Claims claims = jwtService.validateToken(token);
-
-    assertThat(claims).isNotNull();
-    assertThat(jwtService.getUserIdFromClaims(claims)).isEqualTo(userId);
-    assertThat(jwtService.getEmailFromClaims(claims)).isEqualTo(email);
+    assertThatThrownBy(() -> jwtService.validateAndGetUserId(tampered))
+        .isInstanceOf(JwtService.JwtValidationException.class);
   }
 
   @Test
-  void rejectsInvalidToken() {
-    String invalidToken = "invalid.jwt.token";
-
-    Claims claims = jwtService.validateToken(invalidToken);
-
-    assertThat(claims).isNull();
-  }
-
-  @Test
-  void rejectsTamperedToken() {
-    UUID userId = UUID.randomUUID();
-    String email = "test@docshare.local";
-
-    String token = jwtService.generateAccessToken(userId, email);
-    // Tamper with the token by changing a character
-    String tamperedToken = token.substring(0, token.length() - 5) + "XXXXX";
-
-    Claims claims = jwtService.validateToken(tamperedToken);
-
-    assertThat(claims).isNull();
+  void garbageInputFailsValidation() {
+    assertThatThrownBy(() -> jwtService.validateAndGetUserId("not-a-jwt-at-all"))
+        .isInstanceOf(JwtService.JwtValidationException.class);
   }
 }
