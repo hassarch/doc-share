@@ -48,6 +48,8 @@ docshare:
     secret: ${JWT_SECRET:change-me-in-every-environment-this-is-a-local-dev-only-default}
     access-token-ttl-minutes: 15
     refresh-token-ttl-days: 7
+  password-reset:
+    token-ttl-minutes: 30
   storage:
     minio:
       endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
