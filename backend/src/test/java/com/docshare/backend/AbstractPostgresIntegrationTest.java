@@ -1,28 +1,38 @@
 package com.docshare.backend;
 
 import org.junit.jupiter.api.Tag;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 /**
- * Base class for repository integration tests that need a real Postgres — not H2, not a mock —
- * because this system leans on Postgres-specific features (generated {@code tsvector} columns,
- * JSONB) that an in-memory substitute can't faithfully emulate.
+ * Base class for integration tests that need real infrastructure — Postgres and, as of the
+ * Authentication phase, Redis too (for refresh-token storage). Not H2, not a mock, not an
+ * excluded-autoconfiguration "fast" context: this system leans on Postgres-specific features
+ * (generated {@code tsvector} columns, JSONB) and on Redis actually being reachable for any service
+ * that depends on {@code StringRedisTemplate} — neither fakes that faithfully.
  *
- * <p>One container is shared across all subclasses' test methods within a single JVM
- * (Testcontainers reuses it across the {@code @SpringBootTest} contexts as long as the container
- * instance itself is static and started once) — this keeps the suite fast as more IT classes are
- * added in later phases, instead of paying container-startup cost per test.
+ * <p><strong>History note:</strong> {@code BackendApplicationTests} used to run against a {@code
+ * test} profile that excluded DataSource/JPA/Redis/ Kafka autoconfiguration, on the theory that a
+ * plain "does the context load" smoke test shouldn't need real infrastructure. That broke the
+ * moment real {@code @Repository} interfaces existed (Phase 4) and would have broken outright once
+ * a bean required {@code StringRedisTemplate} (this phase) — Spring fails fast when a required bean
+ * type has no provider. This class replaces that approach: every context-loading test, including
+ * the plain smoke test, now runs against real containers, same as every other integration test in
+ * this suite.
  *
- * <p>Tagged {@code integration} so these can be run separately from the fast unit-test suite in CI
- * (see the CI phase).
+ * <p>Containers are static, so Testcontainers reuses them across all subclasses' test methods
+ * within a single JVM run instead of paying startup cost per test class.
  */
 @Testcontainers
 @SpringBootTest
+@AutoConfigureMockMvc
 @Tag("integration")
 public abstract class AbstractPostgresIntegrationTest {
 
@@ -33,13 +43,20 @@ public abstract class AbstractPostgresIntegrationTest {
           .withUsername("docshare_test")
           .withPassword("docshare_test");
 
+  @Container
+  static final GenericContainer<?> REDIS =
+      new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
+
   @DynamicPropertySource
-  static void registerPostgresProperties(DynamicPropertyRegistry registry) {
+  static void registerContainerProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("spring.datasource.username", POSTGRES::getUsername);
     registry.add("spring.datasource.password", POSTGRES::getPassword);
     // Flyway runs its real migrations (including V1__initial_schema.sql)
     // against this container — this is deliberate: the whole point of
     // these tests is proving the migration + entity mapping actually agree.
+
+    registry.add("spring.data.redis.host", REDIS::getHost);
+    registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
   }
 }
