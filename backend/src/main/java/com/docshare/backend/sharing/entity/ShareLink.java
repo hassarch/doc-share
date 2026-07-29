@@ -8,8 +8,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * A public share link for a document (FR-4.4-4.7): optional expiration, optional password,
- * optional download limit, optionally read-only. {@code documentId} is a plain UUID for the same
+ * A public share link for a document (FR-4.4-4.7): optional expiration, optional password, optional
+ * download limit, optionally read-only. {@code documentId} is a plain UUID for the same
  * cross-module reasons as {@link Permission}.
  */
 @Entity

@@ -2,7 +2,7 @@ package com.docshare.backend.users.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.docshare.backend.AbstractIntegrationTest;
+import com.docshare.backend.AbstractPostgresIntegrationTest;
 import com.docshare.backend.users.entity.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -11,14 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Proves the full chain works together: Flyway's V1 migration creates the {@code users} table,
- * Hibernate's {@code User} entity mapping matches it (recall {@code ddl-auto: validate} — this
- * test would fail loudly at context startup if the entity and the migration disagreed), and the
+ * Hibernate's {@code User} entity mapping matches it (recall {@code ddl-auto: validate} — this test
+ * would fail loudly at context startup if the entity and the migration disagreed), and the
  * repository can actually read/write through it against a real Postgres.
  *
- * <p>Uses Testcontainers-managed Postgres and Redis via {@link AbstractIntegrationTest}.
+ * <p>Uses Testcontainers-managed Postgres and Redis via {@link AbstractPostgresIntegrationTest}.
  */
 @Transactional
-class UserRepositoryIT extends AbstractIntegrationTest {
+class UserRepositoryIT extends AbstractPostgresIntegrationTest {
 
   @Autowired private UserRepository userRepository;
 
@@ -30,8 +30,7 @@ class UserRepositoryIT extends AbstractIntegrationTest {
   @Test
   void savesAndFindsUserByEmail() {
     User user =
-        new User(
-            "ada@docshare.local", "bcrypt-hash-placeholder", "Ada Lovelace", 5_368_709_120L);
+        new User("ada@docshare.local", "bcrypt-hash-placeholder", "Ada Lovelace", 5_368_709_120L);
 
     userRepository.save(user);
 

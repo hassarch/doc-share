@@ -45,6 +45,11 @@ public class GlobalExceptionHandler {
     return respond(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage());
   }
 
+  @ExceptionHandler(InvalidCredentialsException.class)
+  public ResponseEntity<ErrorEnvelope> handleInvalidCredentials(InvalidCredentialsException ex) {
+    return respond(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", ex.getMessage());
+  }
+
   /** Bean Validation failures on {@code @Valid} request bodies. */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorEnvelope> handleBeanValidation(MethodArgumentNotValidException ex) {

@@ -70,4 +70,8 @@ public class User extends BaseEntity {
     }
     this.storageUsedBytes = updated;
   }
+
+  public void updatePasswordHash(String newPasswordHash) {
+    this.passwordHash = newPasswordHash;
+  }
 }
