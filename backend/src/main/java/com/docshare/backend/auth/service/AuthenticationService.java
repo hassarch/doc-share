@@ -1,203 +1,121 @@
 package com.docshare.backend.auth.service;
 
-import com.docshare.backend.auth.dto.AuthResponse;
-import com.docshare.backend.auth.dto.LoginRequest;
-import com.docshare.backend.auth.dto.RegisterRequest;
-import com.docshare.backend.common.exception.ConflictException;
-import com.docshare.backend.common.exception.ValidationException;
+import com.docshare.backend.auth.dto.TokenPairResponse;
+import com.docshare.backend.common.exception.InvalidCredentialsException;
 import com.docshare.backend.users.entity.User;
-import com.docshare.backend.users.repository.UserRepository;
-import java.security.SecureRandom;
-import java.time.Duration;
-import java.util.Base64;
-import java.util.UUID;
+import com.docshare.backend.users.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Core authentication operations: registration (FR-1.1), login (FR-1.2), refresh (FR-1.6), logout
- * (FR-1.3), and password-reset token issuance (FR-1.4). This is deliberately NOT wired through
- * Spring Security's AuthenticationManager machinery — login is a stateless REST endpoint that
- * returns tokens, not a session-based form flow, so manually comparing the password hash and
- * issuing tokens directly is simpler and more explicit than fighting framework assumptions.
- *
- * <p>Refresh tokens are stored in Redis with a 7-day TTL (configurable). They're opaque random
- * strings, not JWTs — the point is to make them revocable (logout) without blacklisting access
- * tokens.
+ * Orchestrates the auth flows (FR-1.1-1.5) by composing {@link UserService} (for identity, via the
+ * module boundary — never {@code users.repository} directly), {@link JwtService} (access tokens),
+ * {@link RefreshTokenService} (revocable refresh tokens), and {@link PasswordResetTokenService}
+ * (reset flow).
  */
 @Service
 public class AuthenticationService {
 
   private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
-  private final UserRepository userRepository;
-  private final PasswordEncoder passwordEncoder;
+  private final UserService userService;
   private final JwtService jwtService;
-  private final StringRedisTemplate redisTemplate;
-  private final SecureRandom secureRandom = new SecureRandom();
-  private final long refreshTokenTtlMillis;
+  private final RefreshTokenService refreshTokenService;
+  private final PasswordResetTokenService passwordResetTokenService;
 
   public AuthenticationService(
-      UserRepository userRepository,
-      PasswordEncoder passwordEncoder,
+      UserService userService,
       JwtService jwtService,
-      StringRedisTemplate redisTemplate,
-      @Value("${docshare.jwt.refresh-token-ttl-days}") long refreshTokenTtlDays) {
-    this.userRepository = userRepository;
-    this.passwordEncoder = passwordEncoder;
+      RefreshTokenService refreshTokenService,
+      PasswordResetTokenService passwordResetTokenService) {
+    this.userService = userService;
     this.jwtService = jwtService;
-    this.redisTemplate = redisTemplate;
-    this.refreshTokenTtlMillis = Duration.ofDays(refreshTokenTtlDays).toMillis();
+    this.refreshTokenService = refreshTokenService;
+    this.passwordResetTokenService = passwordResetTokenService;
+  }
+
+  public User register(String email, String rawPassword, String name) {
+    return userService.register(email, rawPassword, name);
+  }
+
+  /** FR-1.2: verify credentials, issue an access + refresh token pair. */
+  public TokenPairResponse login(String email, String rawPassword) {
+    User user =
+        userService
+            .findByEmail(email)
+            .filter(u -> userService.matchesPassword(u, rawPassword))
+            .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+    return issueTokenPair(user);
   }
 
   /**
-   * Registers a new user (FR-1.1). Email is normalized to lowercase; password is bcrypt-hashed.
-   * Returns JWT pair immediately — no separate email verification step in this phase.
+   * FR-1.5: exchange a valid, unexpired refresh token for a new token pair. The old refresh token
+   * is revoked as part of rotation (see {@link RefreshTokenService}).
    */
-  @Transactional
-  public AuthResponse register(RegisterRequest request) {
-    String normalizedEmail = request.email().toLowerCase().trim();
-
-    if (userRepository.existsByEmail(normalizedEmail)) {
-      throw new ConflictException("Email already registered");
-    }
-
-    String hashedPassword = passwordEncoder.encode(request.password());
-    User user =
-        new User(
-            normalizedEmail,
-            hashedPassword,
-            request.name().trim(),
-            5_368_709_120L // 5 GB default quota per PRD FR-8
-            );
-
-    userRepository.save(user);
-    log.info("User registered: email={}, userId={}", normalizedEmail, user.getId());
-
-    return issueTokens(user);
-  }
-
-  /**
-   * Authenticates a user (FR-1.2). Compares the provided password against the stored bcrypt hash.
-   * Returns JWT pair on success; throws ValidationException if credentials are invalid.
-   */
-  @Transactional(readOnly = true)
-  public AuthResponse login(LoginRequest request) {
-    String normalizedEmail = request.email().toLowerCase().trim();
+  public TokenPairResponse refresh(String refreshToken) {
+    var userId =
+        refreshTokenService
+            .resolveUserId(refreshToken)
+            .orElseThrow(() -> new InvalidCredentialsException("Invalid or expired refresh token"));
 
     User user =
-        userRepository
-            .findByEmail(normalizedEmail)
-            .orElseThrow(() -> new ValidationException("Invalid email or password"));
-
-    if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-      throw new ValidationException("Invalid email or password");
-    }
-
-    log.info("User logged in: email={}, userId={}", normalizedEmail, user.getId());
-    return issueTokens(user);
-  }
-
-  /**
-   * Issues a new access token using a valid refresh token (FR-1.6). The refresh token must exist
-   * in Redis and must belong to the user it claims to belong to.
-   */
-  @Transactional(readOnly = true)
-  public AuthResponse refresh(String refreshToken) {
-    String userIdStr = redisTemplate.opsForValue().get(refreshTokenKey(refreshToken));
-
-    if (userIdStr == null) {
-      throw new ValidationException("Invalid or expired refresh token");
-    }
-
-    UUID userId = UUID.fromString(userIdStr);
-    User user =
-        userRepository
+        userService
             .findById(userId)
-            .orElseThrow(() -> new ValidationException("User not found"));
+            .orElseThrow(() -> new InvalidCredentialsException("Invalid or expired refresh token"));
 
-    String newAccessToken = jwtService.generateAccessToken(user.getId(), user.getEmail());
-    log.debug("Access token refreshed for userId={}", userId);
-
-    // Reuse the existing refresh token — no need to rotate it on every refresh
-    return new AuthResponse(newAccessToken, refreshToken);
+    refreshTokenService.revoke(refreshToken); // rotation: old token can't be reused
+    return issueTokenPair(user);
   }
 
-  /**
-   * Revokes a refresh token (FR-1.3), making it unusable for future access token generation. The
-   * current access token remains valid until expiration (up to 15 min) — this is deliberate, not a
-   * bug. Blacklisting JWTs would defeat the horizontal-scaling benefit of stateless tokens.
-   */
+  /** FR-1.3: revoke a refresh token — this is what "logout" means server-side. */
   public void logout(String refreshToken) {
-    String key = refreshTokenKey(refreshToken);
-    Boolean deleted = redisTemplate.delete(key);
-
-    if (Boolean.TRUE.equals(deleted)) {
-      log.info("Refresh token revoked: {}", refreshToken.substring(0, 8) + "...");
-    } else {
-      log.debug("Logout called with non-existent or already-expired refresh token");
-    }
+    refreshTokenService.revoke(refreshToken);
   }
 
   /**
-   * Initiates password reset (FR-1.4). Always returns success to prevent account enumeration. If
-   * the email exists, a reset token is generated and stored in Redis with a 1-hour TTL.
+   * FR-1.4: issue a password-reset token if the email exists. Deliberately returns nothing
+   * distinguishing "email exists" from "email doesn't exist" to the caller — see {@link
+   * com.docshare.backend.auth.controller.AuthController} for how the generic response is produced
+   * either way.
    *
-   * <p><strong>TODO(notification-phase):</strong> Once the Notification Service is implemented,
-   * this token should be emailed to the user. For now, it's only logged server-side for manual
-   * retrieval in local testing.
+   * <p>TODO(notification-phase): send the token via email instead of logging it. Logging is a
+   * temporary, local-dev-only stand-in until the Notification Service exists — this must not ship
+   * to any real environment as-is.
    */
-  @Transactional(readOnly = true)
-  public void initiatePasswordReset(String email) {
-    String normalizedEmail = email.toLowerCase().trim();
-    var user = userRepository.findByEmail(normalizedEmail);
-
-    if (user.isPresent()) {
-      String resetToken = generateSecureToken();
-      String key = passwordResetTokenKey(resetToken);
-
-      redisTemplate.opsForValue().set(key, user.get().getId().toString(), Duration.ofHours(1));
-
-      // TODO(notification-phase): Send email instead of logging
-      log.warn(
-          "Password reset token (LOG ONLY — will be emailed once Notification Service is ready): "
-              + "email={}, token={}",
-          normalizedEmail,
-          resetToken);
-    } else {
-      log.debug("Password reset requested for non-existent email: {}", normalizedEmail);
-    }
+  public void requestPasswordReset(String email) {
+    userService
+        .findByEmail(email)
+        .ifPresent(
+            user -> {
+              String token = passwordResetTokenService.issue(user.getId());
+              log.info(
+                  "Password reset requested for userId={}. token={} (TEMPORARY: log instead of"
+                      + " email until the Notification Service exists)",
+                  user.getId(),
+                  token);
+            });
   }
 
-  /** Generates a JWT pair and stores the refresh token in Redis. */
-  private AuthResponse issueTokens(User user) {
-    String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail());
-    String refreshToken = generateSecureToken();
+  /** FR-1.4: consume a reset token and set the new password. */
+  public void confirmPasswordReset(String token, String newRawPassword) {
+    var userId =
+        passwordResetTokenService
+            .consume(token)
+            .orElseThrow(() -> new InvalidCredentialsException("Invalid or expired reset token"));
 
-    redisTemplate
-        .opsForValue()
-        .set(refreshTokenKey(refreshToken), user.getId().toString(), Duration.ofMillis(refreshTokenTtlMillis));
+    User user =
+        userService
+            .findById(userId)
+            .orElseThrow(() -> new InvalidCredentialsException("Invalid or expired reset token"));
 
-    return new AuthResponse(accessToken, refreshToken);
+    userService.changePassword(user, newRawPassword);
   }
 
-  /** Generates a cryptographically secure random token. */
-  private String generateSecureToken() {
-    byte[] randomBytes = new byte[32];
-    secureRandom.nextBytes(randomBytes);
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
-  }
-
-  private String refreshTokenKey(String token) {
-    return "refresh_token:" + token;
-  }
-
-  private String passwordResetTokenKey(String token) {
-    return "password_reset:" + token;
+  private TokenPairResponse issueTokenPair(User user) {
+    String accessToken = jwtService.issueAccessToken(user.getId(), user.getEmail());
+    String refreshToken = refreshTokenService.issue(user.getId());
+    return new TokenPairResponse(accessToken, refreshToken, jwtService.getAccessTokenTtlSeconds());
   }
 }
