@@ -15,9 +15,9 @@ import java.util.UUID;
  * Document metadata — never file bytes (FR-5.1). The actual bytes live on a storage node,
  * referenced indirectly via {@link DocumentVersion#storageRef}.
  *
- * <p><strong>Cross-module reference pattern:</strong> {@code ownerId} is a plain UUID column, not
- * a JPA {@code @ManyToOne} to {@code users.entity.User}. A JPA relationship would force Hibernate
- * to know how to load a {@code User} directly from the {@code documents} module, defeating the
+ * <p><strong>Cross-module reference pattern:</strong> {@code ownerId} is a plain UUID column, not a
+ * JPA {@code @ManyToOne} to {@code users.entity.User}. A JPA relationship would force Hibernate to
+ * know how to load a {@code User} directly from the {@code documents} module, defeating the
  * module-boundary rule from ADR-0001 #2 at the ORM level. When code in this module needs user
  * details (e.g. the owner's display name), it asks a {@code users.service} interface for them — it
  * does not navigate a JPA association into another module's entity. {@code currentVersion} is the
@@ -60,7 +60,11 @@ public class Document extends BaseEntity {
   protected Document() {}
 
   public Document(
-      UUID ownerId, String filename, UUID folderId, long sizeBytes, String mimeType,
+      UUID ownerId,
+      String filename,
+      UUID folderId,
+      long sizeBytes,
+      String mimeType,
       String sha256Hash) {
     this.ownerId = ownerId;
     this.filename = filename;
