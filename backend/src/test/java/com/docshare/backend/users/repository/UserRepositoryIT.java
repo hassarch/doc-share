@@ -2,12 +2,11 @@ package com.docshare.backend.users.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.docshare.backend.AbstractIntegrationTest;
 import com.docshare.backend.users.entity.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -16,12 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
  * test would fail loudly at context startup if the entity and the migration disagreed), and the
  * repository can actually read/write through it against a real Postgres.
  *
- * <p>Uses the local Docker Compose Postgres instance (localhost:5432).
+ * <p>Uses Testcontainers-managed Postgres and Redis via {@link AbstractIntegrationTest}.
  */
-@SpringBootTest
-@ActiveProfiles("integration")
 @Transactional
-class UserRepositoryIT {
+class UserRepositoryIT extends AbstractIntegrationTest {
 
   @Autowired private UserRepository userRepository;
 

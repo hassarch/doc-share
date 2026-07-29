@@ -261,15 +261,25 @@ The smoke test excludes database autoconfiguration to remain fast and dependency
 
 ## Status
 
-**Phase 2: Project Initialization** ✅
+**Phase 5: Authentication** ✅
 
-The project scaffold is complete with:
-- ✅ Backend Spring Boot monolith with module structure
-- ✅ Frontend Next.js app with TypeScript and Tailwind
-- ✅ Local development infrastructure (Docker Compose)
-- ✅ Basic configuration and smoke tests
+JWT-based authentication is now fully implemented with:
+- ✅ User registration, login, logout endpoints
+- ✅ JWT access tokens (15 min TTL, stateless validation)
+- ✅ Refresh tokens (7 day TTL, stored in Redis)
+- ✅ Password reset token issuance
+- ✅ SecurityConfig wired with JWT authentication filter
+- ✅ All endpoints except `/api/v1/auth/*` now require valid JWT
 
-Next phases will add database schemas, authentication, storage integration, and feature implementation.
+See `backend/TEST_AUTH.md` for manual testing guide.
+
+Previous phases:
+- **Phase 4: Database Schema** ✅ - User entity, Flyway migrations, JPA auditing
+- **Phase 3: Security Baseline** ✅ - CORS, CSRF, password encoder
+- **Phase 2: Project Initialization** ✅ - Backend/frontend scaffold, Docker infrastructure
+- **Phase 0: Foundations** ✅ - Modular monolith architecture
+
+Next phases will add document storage, folder management, sharing, and synchronization.
 
 ## License
 

@@ -1,5 +1,6 @@
 package com.docshare.backend.config;
 
+import com.docshare.backend.auth.service.JwtAuthenticationFilter;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -17,21 +19,21 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * The shape of request authorization for this application — which paths are public, which require
  * authentication, and the session/CORS/CSRF posture.
  *
- * <p><strong>What this class deliberately does NOT do yet:</strong> validate JWTs. Per FR-1.7 ("all
- * endpoints except {@code /auth/*} require a valid JWT"), a {@code JwtAuthenticationFilter} needs
- * to sit in this chain — that filter, and everything about issuing/validating tokens, is built in
- * the Authentication phase, not here. Right now every non-public path requires *some* authenticated
- * principal, but nothing in this codebase yet knows how to produce one — so hitting a protected
- * endpoint today will correctly fail with 401 until the Auth phase adds the filter that populates
- * the {@code SecurityContext}.
+ * <p>JWT validation is now wired through {@link JwtAuthenticationFilter}, which extracts tokens
+ * from the {@code Authorization: Bearer <token>} header and populates Spring Security's {@code
+ * SecurityContext}. Per FR-1.7, all endpoints except {@code /auth/*} require a valid JWT — this is
+ * enforced by the combination of the filter (which produces an authenticated principal) and the
+ * security chain below (which demands {@code authenticated()} for non-public paths).
  *
  * <p>Rationale for stateless sessions (FR-1.1-1.8): this is a horizontally scaled, multi-instance
  * system (FR-22.x) — session state living in one instance's memory would break the moment the load
- * balancer routes a follow-up request to a different instance. JWTs + Redis (for
- * blacklisting/refresh tracking, added in the Auth phase) avoid that entirely.
+ * balancer routes a follow-up request to a different instance. JWTs + Redis (for refresh token
+ * tracking) avoid that entirely.
  */
 @Configuration
 public class SecurityConfig {
+
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   /**
    * Paths that never require authentication. Kept as a single list here — rather than scattered
@@ -40,6 +42,10 @@ public class SecurityConfig {
   private static final String[] PUBLIC_PATHS = {
     "/api/v1/auth/**", "/actuator/health", "/actuator/health/**", "/actuator/info",
   };
+
+  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+  }
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -54,11 +60,8 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             authorize ->
-                authorize.requestMatchers(PUBLIC_PATHS).permitAll().anyRequest().authenticated());
-
-    // TODO(auth-phase): add JwtAuthenticationFilter here, e.g.
-    //   http.addFilterBefore(jwtAuthenticationFilter,
-    //       UsernamePasswordAuthenticationFilter.class);
+                authorize.requestMatchers(PUBLIC_PATHS).permitAll().anyRequest().authenticated())
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
