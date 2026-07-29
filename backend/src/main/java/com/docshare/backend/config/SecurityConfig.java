@@ -1,6 +1,6 @@
 package com.docshare.backend.config;
 
-import com.docshare.backend.auth.service.JwtAuthenticationFilter;
+import com.docshare.backend.auth.security.JwtAuthenticationFilter;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,21 +19,17 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * The shape of request authorization for this application — which paths are public, which require
  * authentication, and the session/CORS/CSRF posture.
  *
- * <p>JWT validation is now wired through {@link JwtAuthenticationFilter}, which extracts tokens
- * from the {@code Authorization: Bearer <token>} header and populates Spring Security's {@code
- * SecurityContext}. Per FR-1.7, all endpoints except {@code /auth/*} require a valid JWT — this is
- * enforced by the combination of the filter (which produces an authenticated principal) and the
- * security chain below (which demands {@code authenticated()} for non-public paths).
+ * <p>As of the Authentication phase, {@link JwtAuthenticationFilter} is wired into this chain and
+ * does the actual work of turning a valid {@code Authorization: Bearer <token>} header into an
+ * authenticated {@code SecurityContext} — see that class's Javadoc for how it behaves.
  *
  * <p>Rationale for stateless sessions (FR-1.1-1.8): this is a horizontally scaled, multi-instance
  * system (FR-22.x) — session state living in one instance's memory would break the moment the load
  * balancer routes a follow-up request to a different instance. JWTs + Redis (for refresh token
- * tracking) avoid that entirely.
+ * tracking, see {@code auth.service.RefreshTokenService}) avoid that entirely.
  */
 @Configuration
 public class SecurityConfig {
-
-  private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   /**
    * Paths that never require authentication. Kept as a single list here — rather than scattered
@@ -42,6 +38,8 @@ public class SecurityConfig {
   private static final String[] PUBLIC_PATHS = {
     "/api/v1/auth/**", "/actuator/health", "/actuator/health/**", "/actuator/info",
   };
+
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
