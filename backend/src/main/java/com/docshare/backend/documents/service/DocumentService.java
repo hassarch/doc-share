@@ -5,6 +5,7 @@ import com.docshare.backend.common.exception.ValidationException;
 import com.docshare.backend.documents.entity.Document;
 import com.docshare.backend.documents.entity.DocumentVersion;
 import com.docshare.backend.documents.entity.Folder;
+import com.docshare.backend.documents.event.DocumentEventPublisher;
 import com.docshare.backend.documents.repository.DocumentRepository;
 import com.docshare.backend.documents.repository.DocumentVersionRepository;
 import com.docshare.backend.documents.repository.FolderRepository;
@@ -24,13 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Orchestrates document upload/download/rename/move/delete.
  *
- * <p><strong>Authorization scope:</strong> every method here checks
- * ownership only. Full RBAC via {@code sharing.entity.Permission}
- * (Viewer/Commenter/Editor/Owner, FR-1.8/4.2) is not wired in yet — that's
- * the Sharing module's job, deliberately not folded into this phase. A
- * document a Viewer has been granted access to will currently 404 for
- * them, which is a known, temporary gap, not a design decision to leave
- * permanently.
+ * <p><strong>Authorization scope:</strong> every method here checks ownership only. Full RBAC via
+ * {@code sharing.entity.Permission} (Viewer/Commenter/Editor/Owner, FR-1.8/4.2) is not wired in yet
+ * — that's the Sharing module's job, deliberately not folded into this phase. A document a Viewer
+ * has been granted access to will currently 404 for them, which is a known, temporary gap, not a
+ * design decision to leave permanently.
  */
 @Service
 public class DocumentService {
@@ -41,6 +40,7 @@ public class DocumentService {
   private final StorageService storageService;
   private final UserService userService;
   private final ObjectMapper objectMapper;
+  private final DocumentEventPublisher eventPublisher;
 
   public DocumentService(
       DocumentRepository documentRepository,
@@ -48,22 +48,23 @@ public class DocumentService {
       FolderRepository folderRepository,
       StorageService storageService,
       UserService userService,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      DocumentEventPublisher eventPublisher) {
     this.documentRepository = documentRepository;
     this.documentVersionRepository = documentVersionRepository;
     this.folderRepository = folderRepository;
     this.storageService = storageService;
     this.userService = userService;
     this.objectMapper = objectMapper;
+    this.eventPublisher = eventPublisher;
   }
 
   /**
-   * Uploads a new document (FR-3.1). Hashes the content first and checks
-   * for an existing match (FR-9.2 dedup) before touching storage — see
-   * this class's Javadoc header comment in the Phase 6 write-up for why
-   * that ordering matters and why hashing reads the whole file into
-   * memory for now (acceptable at this phase's scale; streaming hashing
-   * is a Chunking-phase concern for large files).
+   * Uploads a new document (FR-3.1). Hashes the content first and checks for an existing match
+   * (FR-9.2 dedup) before touching storage — see this class's Javadoc header comment in the Phase 6
+   * write-up for why that ordering matters and why hashing reads the whole file into memory for now
+   * (acceptable at this phase's scale; streaming hashing is a Chunking-phase concern for large
+   * files).
    */
   @Transactional
   public Document upload(
@@ -105,7 +106,13 @@ public class DocumentService {
     version = documentVersionRepository.save(version);
 
     document.setCurrentVersion(version);
-    return documentRepository.save(document);
+    Document saved = documentRepository.save(document);
+
+    // Published after the write succeeds, per FR-21.4 - the upload is
+    // already durable at this point regardless of what happens to this
+    // event (see DocumentEventPublisher's Javadoc).
+    eventPublisher.publishUploaded(saved.getId(), ownerId, filename, content.length);
+    return saved;
   }
 
   public Document getOwned(UUID documentId, UUID requesterId) {
@@ -165,6 +172,7 @@ public class DocumentService {
     document.softDelete();
     documentRepository.save(document);
     userService.recordStorageUsage(requesterId, -document.getSizeBytes());
+    eventPublisher.publishDeleted(document.getId(), requesterId, document.getFilename());
     // Physical bytes are intentionally NOT deleted from storage here —
     // per FR-9.4, reference counting must confirm no other document
     // metadata record still points at the same physical object first.
