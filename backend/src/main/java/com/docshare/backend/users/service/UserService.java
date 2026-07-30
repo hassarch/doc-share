@@ -24,4 +24,12 @@ public interface UserService {
   boolean matchesPassword(User user, String rawPassword);
 
   void changePassword(User user, String newRawPassword);
+
+  /**
+   * Adjusts a user's tracked storage usage by a delta (positive on
+   * upload, negative on delete). Called by the {@code documents} module
+   * through this interface — never by touching {@code User} or {@code
+   * UserRepository} directly, per ADR-0001 #2.
+   */
+  void recordStorageUsage(UUID userId, long deltaBytes);
 }

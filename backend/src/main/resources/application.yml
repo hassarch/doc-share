@@ -4,6 +4,11 @@ spring:
   profiles:
     active: local
 
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:docshare}
     username: ${DB_USER:docshare}
@@ -55,6 +60,7 @@ docshare:
       endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
       access-key: ${MINIO_ACCESS_KEY:docshare}
       secret-key: ${MINIO_SECRET_KEY:docshare123}
+    bucket: documents
     chunk-threshold-mb: 50
     chunk-size-mb: 5
 

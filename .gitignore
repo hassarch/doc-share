@@ -1,6 +1,7 @@
 # ==== Java / Gradle / Maven (backend/) ====
 backend/target/
 backend/build/
+backend/bin/
 backend/out/
 !backend/gradle/wrapper/gradle-wrapper.jar
 backend/.gradle/
