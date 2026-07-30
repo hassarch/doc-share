@@ -29,7 +29,9 @@ public class FolderService {
 
   public Folder getOwnedFolder(UUID folderId, UUID requesterId) {
     Folder folder =
-        folderRepository.findById(folderId).orElseThrow(() -> new NotFoundException("Folder not found"));
+        folderRepository
+            .findById(folderId)
+            .orElseThrow(() -> new NotFoundException("Folder not found"));
     if (!folder.getOwnerId().equals(requesterId)) {
       // Deliberately NotFoundException, not ForbiddenException: revealing
       // "this folder exists but isn't yours" leaks its existence to

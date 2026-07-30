@@ -12,10 +12,9 @@ import java.io.InputStream;
 import org.springframework.stereotype.Service;
 
 /**
- * MinIO-backed implementation of {@link StorageService}. Single-bucket,
- * single-node for this phase — the {@code storage_nodes} table (Phase 4)
- * and multi-node routing land with the Multi-Node Storage/Replication
- * phase, not here.
+ * MinIO-backed implementation of {@link StorageService}. Single-bucket, single-node for this phase
+ * — the {@code storage_nodes} table (Phase 4) and multi-node routing land with the Multi-Node
+ * Storage/Replication phase, not here.
  */
 @Service
 public class MinioStorageService implements StorageService {
@@ -32,8 +31,7 @@ public class MinioStorageService implements StorageService {
   @PostConstruct
   void ensureBucketExists() {
     try {
-      boolean exists =
-          minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
+      boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
       if (!exists) {
         minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
       }
@@ -74,9 +72,9 @@ public class MinioStorageService implements StorageService {
   }
 
   /**
-   * Wraps every MinIO SDK checked exception (it throws about seven
-   * different checked types across its API) into one unchecked type, so
-   * callers of {@link StorageService} don't need to know MinIO exists.
+   * Wraps every MinIO SDK checked exception (it throws about seven different checked types across
+   * its API) into one unchecked type, so callers of {@link StorageService} don't need to know MinIO
+   * exists.
    */
   public static class StorageException extends RuntimeException {
     public StorageException(String message, Throwable cause) {

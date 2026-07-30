@@ -19,8 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,8 +57,7 @@ public class DocumentController {
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<DocumentResponse> upload(
-      @RequestPart("file") MultipartFile file,
-      @RequestParam(required = false) UUID folderId)
+      @RequestPart("file") MultipartFile file, @RequestParam(required = false) UUID folderId)
       throws IOException {
     if (file.isEmpty()) {
       throw new ValidationException("Uploaded file is empty");
@@ -91,11 +90,10 @@ public class DocumentController {
   }
 
   /**
-   * Streams the file directly rather than issuing a signed URL — signed,
-   * time-limited MinIO URLs (FR-3.2/FR-19.8) are a small addition once the
-   * frontend needs to embed direct links (e.g. for in-browser PDF
-   * preview); a straightforward authenticated stream is the right default
-   * for a basic download button today.
+   * Streams the file directly rather than issuing a signed URL — signed, time-limited MinIO URLs
+   * (FR-3.2/FR-19.8) are a small addition once the frontend needs to embed direct links (e.g. for
+   * in-browser PDF preview); a straightforward authenticated stream is the right default for a
+   * basic download button today.
    */
   @GetMapping("/{id}/download")
   public ResponseEntity<InputStreamResource> download(@PathVariable UUID id) {
