@@ -67,4 +67,15 @@ public class UserServiceImpl implements UserService {
     user.updatePasswordHash(passwordEncoder.encode(newRawPassword));
     userRepository.save(user);
   }
+
+  @Override
+  @Transactional
+  public void recordStorageUsage(UUID userId, long deltaBytes) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new IllegalStateException("User not found: " + userId));
+    user.recordStorageUsed(deltaBytes);
+    userRepository.save(user);
+  }
 }
