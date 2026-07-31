@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getAccessToken, getRefreshToken, clearTokens } from "@/lib/api";
 import { login as apiLogin, logout as apiLogout, register as apiRegister } from "@/lib/auth-api";
@@ -16,17 +16,10 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use lazy initializer to compute initial auth state without an effect
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getAccessToken()));
+  const [isLoading] = useState(false); // Always false - auth check is synchronous
   const router = useRouter();
-
-  // Client-only auth check on mount. This deferred check avoids SSR/hydration
-  // mismatches - server can't read localStorage. An expired token is handled
-  // by apiFetch's refresh-or-fail logic on first real request, not here.
-  useEffect(() => {
-    setIsAuthenticated(Boolean(getAccessToken()));
-    setIsLoading(false);
-  }, []);
 
   async function login(email: string, password: string) {
     await apiLogin(email, password);

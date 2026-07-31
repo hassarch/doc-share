@@ -62,7 +62,7 @@ export function ShareModal({ open, onOpenChange, document }: ShareModalProps) {
           <div className="flex items-start justify-between mb-4">
             <div>
               <Dialog.Title className="text-lg font-semibold text-graphite">
-                Share &ldquo;{document.filename}&rdquo;
+                Share &quot;{document.filename}&quot;
               </Dialog.Title>
               <Dialog.Description className="text-sm text-graphite-soft mt-1">
                 Collaborate with others or create a public link
