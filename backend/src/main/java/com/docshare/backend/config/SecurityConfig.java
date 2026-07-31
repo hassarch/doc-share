@@ -36,7 +36,12 @@ public class SecurityConfig {
    * {@code permitAll()} calls across modules — so it's obvious at a glance what's actually public.
    */
   private static final String[] PUBLIC_PATHS = {
-    "/api/v1/auth/**", "/actuator/health", "/actuator/health/**", "/actuator/info",
+    "/api/v1/auth/**",
+    "/actuator/health",
+    "/actuator/health/**",
+    "/actuator/info",
+    "/ws/**", // WebSocket handshake auth is handled by JwtHandshakeInterceptor, not this filter
+    // chain
   };
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
