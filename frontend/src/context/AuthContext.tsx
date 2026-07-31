@@ -7,7 +7,6 @@ import { login as apiLogin, logout as apiLogout, register as apiRegister } from 
 
 interface AuthContextValue {
   isAuthenticated: boolean;
-  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -16,9 +15,8 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Use lazy initializer to compute initial auth state without an effect
+  // Initialize state directly by checking for token presence
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getAccessToken()));
-  const [isLoading] = useState(false); // Always false - auth check is synchronous
   const router = useRouter();
 
   async function login(email: string, password: string) {
@@ -44,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

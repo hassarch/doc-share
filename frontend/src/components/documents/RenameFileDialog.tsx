@@ -21,6 +21,7 @@ export function RenameFileDialog({
   onRename,
   isRenaming,
 }: RenameFileDialogProps) {
+  // Use key prop on Dialog.Root to reset state when document changes
   const [filename, setFilename] = useState(document.filename);
 
   function handleSubmit(e: React.FormEvent) {
@@ -28,9 +29,16 @@ export function RenameFileDialog({
     onRename(document.id, filename);
   }
 
-  // Reset filename when dialog opens using key prop on Dialog.Root
+  // Reset filename when dialog closes
+  function handleOpenChange(newOpen: boolean) {
+    if (!newOpen) {
+      setFilename(document.filename);
+    }
+    onOpenChange(newOpen);
+  }
+
   return (
-    <Dialog.Root key={document.id} open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange} key={document.id}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-paper p-6 shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
