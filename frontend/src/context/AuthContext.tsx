@@ -24,10 +24,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // mismatches - server can't read localStorage. An expired token is handled
   // by apiFetch's refresh-or-fail logic on first real request, not here.
   useEffect(() => {
-    // Existence of an access token is treated as "logged in" for routing
-    // purposes; an expired-but-present token is caught by apiFetch's
-    // refresh-or-fail logic on the first real request, not here.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAuthenticated(Boolean(getAccessToken()));
     setIsLoading(false);
   }, []);
