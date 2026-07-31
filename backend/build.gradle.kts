@@ -49,6 +49,9 @@ dependencies {
 	// --- Messaging (Kafka — wired up starting Phase 3) ---
 	implementation("org.springframework.kafka:spring-kafka")
 
+	// --- WebSocket (real-time notifications) ---
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
+
 	// --- Object storage (MinIO — wired up starting Phase 1) ---
 	implementation("io.minio:minio:8.5.13")
 
@@ -73,6 +76,7 @@ dependencies {
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("org.testcontainers:kafka")
 	testImplementation("org.testcontainers:testcontainers")
+	testImplementation("org.awaitility:awaitility:4.2.2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

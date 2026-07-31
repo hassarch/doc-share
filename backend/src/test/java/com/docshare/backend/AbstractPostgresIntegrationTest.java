@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -56,6 +57,10 @@ public abstract class AbstractPostgresIntegrationTest {
           .withEnv("MINIO_ROOT_PASSWORD", "docshare_test")
           .withExposedPorts(9000);
 
+  @Container
+  static final KafkaContainer KAFKA =
+      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.1"));
+
   @DynamicPropertySource
   static void registerContainerProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
@@ -73,5 +78,7 @@ public abstract class AbstractPostgresIntegrationTest {
         () -> "http://" + MINIO.getHost() + ":" + MINIO.getMappedPort(9000));
     registry.add("docshare.storage.minio.access-key", () -> "docshare_test");
     registry.add("docshare.storage.minio.secret-key", () -> "docshare_test");
+
+    registry.add("spring.kafka.bootstrap-servers", KAFKA::getBootstrapServers);
   }
 }

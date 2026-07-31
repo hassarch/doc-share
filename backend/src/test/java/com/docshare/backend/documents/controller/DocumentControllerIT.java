@@ -18,10 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * Full-stack proof: real Postgres for metadata, real MinIO for bytes, real
- * JWT auth guarding every call. Covers upload, metadata retrieval,
- * download-content-matches-upload, deduplication (two uploads of identical
- * content produce two Document rows sharing one physical object), and
+ * Full-stack proof: real Postgres for metadata, real MinIO for bytes, real JWT auth guarding every
+ * call. Covers upload, metadata retrieval, download-content-matches-upload, deduplication (two
+ * uploads of identical content produce two Document rows sharing one physical object), and
  * soft-delete.
  */
 class DocumentControllerIT extends AbstractPostgresIntegrationTest {
@@ -63,8 +62,7 @@ class DocumentControllerIT extends AbstractPostgresIntegrationTest {
   void uploadThenGetThenDownloadRoundTripsContent() throws Exception {
     String accessToken = registerAndLogin();
     byte[] content = "hello docshare, this is a test file".getBytes();
-    MockMultipartFile file =
-        new MockMultipartFile("file", "hello.txt", "text/plain", content);
+    MockMultipartFile file = new MockMultipartFile("file", "hello.txt", "text/plain", content);
 
     MvcResult uploadResult =
         mockMvc
