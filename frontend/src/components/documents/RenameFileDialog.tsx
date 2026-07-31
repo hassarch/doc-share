@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { Button } from "../common/Button";
@@ -23,20 +23,14 @@ export function RenameFileDialog({
 }: RenameFileDialogProps) {
   const [filename, setFilename] = useState(document.filename);
 
-  // Sync local state when document prop changes (e.g., when dialog opens for different document).
-  // This is a legitimate data-sync pattern where external prop drives local form state.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFilename(document.filename);
-  }, [document.filename]);
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onRename(document.id, filename);
   }
 
+  // Reset filename when dialog opens using key prop on Dialog.Root
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root key={document.id} open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-paper p-6 shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
