@@ -23,7 +23,10 @@ export function RenameFileDialog({
 }: RenameFileDialogProps) {
   const [filename, setFilename] = useState(document.filename);
 
+  // Sync local state when document prop changes (e.g., when dialog opens for different document).
+  // This is a legitimate data-sync pattern where external prop drives local form state.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilename(document.filename);
   }, [document.filename]);
 
