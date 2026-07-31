@@ -2,20 +2,17 @@ package com.docshare.backend.notification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.docshare.backend.AbstractPostgresIntegrationTest;
 import com.docshare.backend.notification.entity.NotificationType;
 import com.docshare.backend.notification.repository.NotificationRepository;
 import com.docshare.backend.notification.service.NotificationService;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
-@ActiveProfiles("test")
 @Transactional
-class NotificationServiceIT {
+class NotificationServiceIT extends AbstractPostgresIntegrationTest {
 
   @Autowired private NotificationService notificationService;
   @Autowired private NotificationRepository notificationRepository;

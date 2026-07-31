@@ -84,6 +84,28 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
+// Fast feedback loop: plain unit tests only, no Docker/Testcontainers
+// needed. This is what `./gradlew test` runs by default, and what you'd
+// run on every save while coding.
+tasks.test {
+	useJUnitPlatform {
+		excludeTags("integration")
+	}
+}
+
+// Full-system proof: everything tagged "integration" in
+// AbstractPostgresIntegrationTest and its subclasses - real Postgres,
+// Redis, MinIO, Kafka via Testcontainers. Needs Docker. Run explicitly
+// with `./gradlew integrationTest`, and in CI as its own job/step.
+tasks.register<Test>("integrationTest") {
+	description = "Runs integration tests (real Postgres/Redis/MinIO/Kafka via Testcontainers)."
+	group = "verification"
+	useJUnitPlatform {
+		includeTags("integration")
+	}
+	shouldRunAfter(tasks.test)
+}
+
 tasks.withType<BootJar> {
 	archiveFileName.set("docshare-backend.jar")
 }
