@@ -76,6 +76,7 @@ dependencies {
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("org.testcontainers:kafka")
 	testImplementation("org.testcontainers:testcontainers")
+	testImplementation("org.awaitility:awaitility:4.2.2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
