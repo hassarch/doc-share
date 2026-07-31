@@ -1,13 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getAccessToken, getRefreshToken, clearTokens } from "@/lib/api";
 import { login as apiLogin, logout as apiLogout, register as apiRegister } from "@/lib/auth-api";
 
 interface AuthContextValue {
   isAuthenticated: boolean;
-  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -16,17 +15,9 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // Initialize state directly by checking for token presence
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getAccessToken()));
   const router = useRouter();
-
-  useEffect(() => {
-    // Existence of an access token is treated as "logged in" for routing
-    // purposes; an expired-but-present token is caught by apiFetch's
-    // refresh-or-fail logic on the first real request, not here.
-    setIsAuthenticated(Boolean(getAccessToken()));
-    setIsLoading(false);
-  }, []);
 
   async function login(email: string, password: string) {
     await apiLogin(email, password);
@@ -51,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
