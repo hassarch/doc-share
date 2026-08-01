@@ -49,6 +49,9 @@ dependencies {
 	// --- Messaging (Kafka — wired up starting Phase 3) ---
 	implementation("org.springframework.kafka:spring-kafka")
 
+	// --- WebSocket (real-time notifications) ---
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
+
 	// --- Object storage (MinIO — wired up starting Phase 1) ---
 	implementation("io.minio:minio:8.5.13")
 
@@ -73,11 +76,48 @@ dependencies {
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("org.testcontainers:kafka")
 	testImplementation("org.testcontainers:testcontainers")
+	testImplementation("org.awaitility:awaitility:4.2.2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+// Fast feedback loop: plain unit tests only, no Docker/Testcontainers
+// needed. This is what `./gradlew test` runs by default, and what you'd
+// run on every save while coding.
+tasks.test {
+	useJUnitPlatform {
+		excludeTags("integration")
+	}
+}
+
+// Full-system proof: everything tagged "integration" in
+// AbstractPostgresIntegrationTest and its subclasses - real Postgres,
+// Redis, MinIO, Kafka via Testcontainers. Needs Docker. Run explicitly
+// with `./gradlew integrationTest`, and in CI as its own job/step.
+tasks.register<Test>("integrationTest") {
+	description = "Runs integration tests (real Postgres/Redis/MinIO/Kafka via Testcontainers)."
+	group = "verification"
+	useJUnitPlatform {
+		includeTags("integration")
+	}
+	shouldRunAfter(tasks.test)
+	
+	// Run tests sequentially to avoid container resource conflicts
+	maxParallelForks = 1
+	
+	// Increase timeouts for slow CI environments
+	systemProperty("junit.jupiter.execution.timeout.default", "5m")
+	systemProperty("spring.test.context.cache.maxSize", "1")
+	
+	// More verbose test output
+	testLogging {
+		events("passed", "skipped", "failed", "standardOut", "standardError")
+		exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+		showStandardStreams = false
+	}
 }
 
 tasks.withType<BootJar> {

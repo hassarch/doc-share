@@ -5,6 +5,7 @@ import com.docshare.backend.common.exception.ValidationException;
 import com.docshare.backend.documents.entity.Document;
 import com.docshare.backend.documents.entity.DocumentVersion;
 import com.docshare.backend.documents.entity.Folder;
+import com.docshare.backend.documents.event.DocumentEventPublisher;
 import com.docshare.backend.documents.repository.DocumentRepository;
 import com.docshare.backend.documents.repository.DocumentVersionRepository;
 import com.docshare.backend.documents.repository.FolderRepository;
@@ -39,6 +40,7 @@ public class DocumentService {
   private final StorageService storageService;
   private final UserService userService;
   private final ObjectMapper objectMapper;
+  private final DocumentEventPublisher eventPublisher;
 
   public DocumentService(
       DocumentRepository documentRepository,
@@ -46,13 +48,15 @@ public class DocumentService {
       FolderRepository folderRepository,
       StorageService storageService,
       UserService userService,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      DocumentEventPublisher eventPublisher) {
     this.documentRepository = documentRepository;
     this.documentVersionRepository = documentVersionRepository;
     this.folderRepository = folderRepository;
     this.storageService = storageService;
     this.userService = userService;
     this.objectMapper = objectMapper;
+    this.eventPublisher = eventPublisher;
   }
 
   /**
@@ -102,7 +106,13 @@ public class DocumentService {
     version = documentVersionRepository.save(version);
 
     document.setCurrentVersion(version);
-    return documentRepository.save(document);
+    Document saved = documentRepository.save(document);
+
+    // Published after the write succeeds, per FR-21.4 - the upload is
+    // already durable at this point regardless of what happens to this
+    // event (see DocumentEventPublisher's Javadoc).
+    eventPublisher.publishUploaded(saved.getId(), ownerId, filename, content.length);
+    return saved;
   }
 
   public Document getOwned(UUID documentId, UUID requesterId) {
@@ -162,6 +172,7 @@ public class DocumentService {
     document.softDelete();
     documentRepository.save(document);
     userService.recordStorageUsage(requesterId, -document.getSizeBytes());
+    eventPublisher.publishDeleted(document.getId(), requesterId, document.getFilename());
     // Physical bytes are intentionally NOT deleted from storage here —
     // per FR-9.4, reference counting must confirm no other document
     // metadata record still points at the same physical object first.

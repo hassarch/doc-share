@@ -1,12 +1,15 @@
 package com.docshare.backend;
 
+import java.time.Duration;
 import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -42,11 +45,19 @@ public abstract class AbstractPostgresIntegrationTest {
       new PostgreSQLContainer<>("postgres:16-alpine")
           .withDatabaseName("docshare_test")
           .withUsername("docshare_test")
-          .withPassword("docshare_test");
+          .withPassword("docshare_test")
+          .withReuse(true) // Reuse containers - critical for shared Spring context
+          .withStartupTimeout(Duration.ofMinutes(2))
+          .waitingFor(
+              Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 2));
 
   @Container
   static final GenericContainer<?> REDIS =
-      new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
+      new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+          .withExposedPorts(6379)
+          .withReuse(true)
+          .withStartupTimeout(Duration.ofMinutes(1))
+          .waitingFor(Wait.forListeningPort());
 
   @Container
   static final GenericContainer<?> MINIO =
@@ -54,7 +65,16 @@ public abstract class AbstractPostgresIntegrationTest {
           .withCommand("server", "/data")
           .withEnv("MINIO_ROOT_USER", "docshare_test")
           .withEnv("MINIO_ROOT_PASSWORD", "docshare_test")
-          .withExposedPorts(9000);
+          .withExposedPorts(9000)
+          .withReuse(true)
+          .withStartupTimeout(Duration.ofMinutes(1))
+          .waitingFor(Wait.forHttp("/minio/health/live").forPort(9000));
+
+  @Container
+  static final KafkaContainer KAFKA =
+      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.1"))
+          .withReuse(true)
+          .withStartupTimeout(Duration.ofMinutes(2));
 
   @DynamicPropertySource
   static void registerContainerProperties(DynamicPropertyRegistry registry) {
@@ -73,5 +93,8 @@ public abstract class AbstractPostgresIntegrationTest {
         () -> "http://" + MINIO.getHost() + ":" + MINIO.getMappedPort(9000));
     registry.add("docshare.storage.minio.access-key", () -> "docshare_test");
     registry.add("docshare.storage.minio.secret-key", () -> "docshare_test");
+    registry.add("docshare.storage.bucket", () -> "documents-test");
+
+    registry.add("spring.kafka.bootstrap-servers", KAFKA::getBootstrapServers);
   }
 }

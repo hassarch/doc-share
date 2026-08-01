@@ -1,0 +1,23 @@
+# Build artifacts (but keep build/libs/*.jar for Dockerfile.simple)
+build/classes
+build/generated
+build/resources
+build/tmp
+build/test-results
+bin/
+.gradle/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Git
+.git/
+
+# Docs
+*.md
+TEST_AUTH.md
+
+# CI
+.github/
