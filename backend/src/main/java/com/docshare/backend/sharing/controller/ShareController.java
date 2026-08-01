@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,11 +40,6 @@ public class ShareController {
     ShareResponse response =
         sharingService.createShare(
             CurrentUser.id(), request.documentId(), request.email(), request.role());
-  public ResponseEntity<ShareResponse> createShare(
-      @Valid @RequestBody CreateShareRequest request, @AuthenticationPrincipal String userId) {
-    ShareResponse response =
-        sharingService.createShare(
-            UUID.fromString(userId), request.documentId(), request.email(), request.role());
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -55,9 +49,8 @@ public class ShareController {
    * <p>GET /api/v1/documents/{documentId}/shares
    */
   @GetMapping("/documents/{documentId}/shares")
-  public ResponseEntity<List<ShareResponse>> listShares(
-      @PathVariable UUID documentId, @AuthenticationPrincipal String userId) {
-    List<ShareResponse> shares = sharingService.listShares(UUID.fromString(userId), documentId);
+  public ResponseEntity<List<ShareResponse>> listShares(@PathVariable UUID documentId) {
+    List<ShareResponse> shares = sharingService.listShares(CurrentUser.id(), documentId);
     return ResponseEntity.ok(shares);
   }
 
@@ -67,9 +60,8 @@ public class ShareController {
    * <p>DELETE /api/v1/shares/{shareId}
    */
   @DeleteMapping("/shares/{shareId}")
-  public ResponseEntity<Void> revokeShare(
-      @PathVariable UUID shareId, @AuthenticationPrincipal String userId) {
-    sharingService.revokeShare(UUID.fromString(userId), shareId);
+  public ResponseEntity<Void> revokeShare(@PathVariable UUID shareId) {
+    sharingService.revokeShare(CurrentUser.id(), shareId);
     return ResponseEntity.noContent().build();
   }
 }

@@ -2,6 +2,7 @@ package com.docshare.backend.sharing.controller;
 
 import com.docshare.backend.common.exception.NotFoundException;
 import com.docshare.backend.common.exception.ValidationException;
+import com.docshare.backend.common.util.CurrentUser;
 import com.docshare.backend.documents.entity.Document;
 import com.docshare.backend.documents.entity.DocumentVersion;
 import com.docshare.backend.documents.repository.DocumentRepository;
@@ -24,7 +25,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,8 +64,8 @@ public class ShareLinkController {
    */
   @PostMapping("/share-links")
   public ResponseEntity<ShareLinkResponse> createShareLink(
-      @Valid @RequestBody CreateShareLinkRequest request, @AuthenticationPrincipal String userId) {
-    ShareLinkResponse response = shareLinkService.createShareLink(UUID.fromString(userId), request);
+      @Valid @RequestBody CreateShareLinkRequest request) {
+    ShareLinkResponse response = shareLinkService.createShareLink(CurrentUser.id(), request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -75,10 +75,8 @@ public class ShareLinkController {
    * <p>GET /api/v1/documents/{documentId}/share-links
    */
   @GetMapping("/documents/{documentId}/share-links")
-  public ResponseEntity<List<ShareLinkResponse>> listShareLinks(
-      @PathVariable UUID documentId, @AuthenticationPrincipal String userId) {
-    List<ShareLinkResponse> links =
-        shareLinkService.listShareLinks(UUID.fromString(userId), documentId);
+  public ResponseEntity<List<ShareLinkResponse>> listShareLinks(@PathVariable UUID documentId) {
+    List<ShareLinkResponse> links = shareLinkService.listShareLinks(CurrentUser.id(), documentId);
     return ResponseEntity.ok(links);
   }
 
@@ -88,9 +86,8 @@ public class ShareLinkController {
    * <p>DELETE /api/v1/share-links/{linkId}
    */
   @DeleteMapping("/share-links/{linkId}")
-  public ResponseEntity<Void> deleteShareLink(
-      @PathVariable UUID linkId, @AuthenticationPrincipal String userId) {
-    shareLinkService.deleteShareLink(UUID.fromString(userId), linkId);
+  public ResponseEntity<Void> deleteShareLink(@PathVariable UUID linkId) {
+    shareLinkService.deleteShareLink(CurrentUser.id(), linkId);
     return ResponseEntity.noContent().build();
   }
 
