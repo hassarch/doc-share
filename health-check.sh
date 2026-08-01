@@ -109,9 +109,10 @@ echo "5️⃣  Quick Test..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 printf "%-25s " "Register Test User:"
 test_email="healthcheck-$(date +%s)@test.com"
+test_password="${HEALTHCHECK_PASSWORD:-TestPassword123!}"
 register_response=$(curl -s -X POST http://localhost:8080/api/v1/auth/register \
     -H "Content-Type: application/json" \
-    -d "{\"email\":\"$test_email\",\"password\":\"test123\",\"name\":\"Health Check\"}" 2>/dev/null)
+    -d "{\"email\":\"$test_email\",\"password\":\"$test_password\",\"name\":\"Health Check\"}" 2>/dev/null)
 
 if echo "$register_response" | grep -q '"id"'; then
     echo -e "${GREEN}✓ Success${NC}"
@@ -119,7 +120,7 @@ if echo "$register_response" | grep -q '"id"'; then
     printf "%-25s " "Login Test:"
     login_response=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
         -H "Content-Type: application/json" \
-        -d "{\"email\":\"$test_email\",\"password\":\"test123\"}" 2>/dev/null)
+        -d "{\"email\":\"$test_email\",\"password\":\"$test_password\"}" 2>/dev/null)
     
     if echo "$login_response" | grep -q '"accessToken"'; then
         echo -e "${GREEN}✓ Success${NC}"
