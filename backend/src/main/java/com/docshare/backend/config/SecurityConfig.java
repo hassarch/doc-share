@@ -1,7 +1,9 @@
 package com.docshare.backend.config;
 
 import com.docshare.backend.auth.security.JwtAuthenticationFilter;
+import java.util.Arrays;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -42,12 +44,18 @@ public class SecurityConfig {
     "/actuator/info",
     "/ws/**", // WebSocket handshake auth is handled by JwtHandshakeInterceptor, not this filter
     // chain
+    "/api/v1/share-links/*/download", // Public share link download (POST with optional password)
+    "/api/v1/share-links/*", // Public share link access (POST with optional password)
   };
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final List<String> allowedOrigins;
 
-  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+  public SecurityConfig(
+      JwtAuthenticationFilter jwtAuthenticationFilter,
+      @Value("${docshare.cors.allowed-origins}") String allowedOrigins) {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    this.allowedOrigins = Arrays.stream(allowedOrigins.split(",")).map(String::trim).toList();
   }
 
   @Bean
@@ -70,14 +78,16 @@ public class SecurityConfig {
   }
 
   /**
-   * Allowed origins are intentionally not "*" — a stricter, explicit list belongs here once the
-   * frontend's deployed URL is known (local dev only for now). Revisit when the Deployment phase
-   * gives us a real origin.
+   * Allowed origins come from {@code docshare.cors.allowed-origins}
+   * (env var {@code CORS_ALLOWED_ORIGINS}), not a hardcoded list — the
+   * frontend's real origin differs between local dev, a demo/staging
+   * environment, and production, and this must never silently default to
+   * {@code "*"} for a credentialed API.
    */
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+    configuration.setAllowedOrigins(allowedOrigins);
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setExposedHeaders(List.of("X-Trace-Id"));

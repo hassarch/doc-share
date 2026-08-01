@@ -8,22 +8,14 @@ import { queryClient } from "@/lib/query-client";
 import { AppShell } from "@/components/layout/AppShell";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, isLoading, router]);
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-graphite-soft">Loading...</div>
-      </div>
-    );
-  }
+  }, [isAuthenticated, router]);
 
   if (!isAuthenticated) {
     return null;

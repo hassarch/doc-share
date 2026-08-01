@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+
+# Environment files (real ones, not .example)
+.env*
+!.env.example
+
+# Docs
+*.md
+
+# CI
+.github/
+
+# Tests
+coverage/

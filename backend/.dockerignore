@@ -1,0 +1,19 @@
+# Build artifacts
+build/
+bin/
+.gradle/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Git
+.git/
+
+# Docs
+*.md
+TEST_AUTH.md
+
+# CI
+.github/

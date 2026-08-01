@@ -99,17 +99,6 @@ export function ShareModal({ open, onOpenChange, document }: ShareModalProps) {
 
           {activeTab === "direct" ? (
             <>
-              {/* Backend not implemented notice */}
-              <div className="mb-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
-                <p className="text-sm font-medium text-yellow-800 mb-1">
-                  ⚠️ Sharing Feature Coming Soon
-                </p>
-                <p className="text-xs text-yellow-700">
-                  The sharing API endpoints are not yet implemented in the backend. 
-                  This is a Phase 0 UI demonstration. Backend implementation coming in Phase 0 completion.
-                </p>
-              </div>
-
               {/* Error message */}
               {(error || sharesError) && (
                 <div className="mb-4 p-3 rounded-lg bg-brick/10 border border-brick/20 text-sm text-brick">

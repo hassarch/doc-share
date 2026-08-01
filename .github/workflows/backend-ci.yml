@@ -89,8 +89,32 @@ jobs:
           name: backend-integration-test-results
           path: backend/build/reports/tests/integrationTest
 
-# A docker-build job (building the deployable image) is deliberately not
-# here yet - it needs a Dockerfile, which belongs to the Deployment phase
-# per the project's phased plan. Adding it now would mean referencing an
-# artifact that doesn't exist, which is exactly the kind of "implement
-# future phases early" this project's workflow rules exist to prevent.
+  docker-build:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest
+    # Only on main, and only after both test jobs pass - a PR proves the
+    # image builds correctly via this same Dockerfile locally if needed,
+    # but doesn't need to push anything anywhere.
+    if: github.ref == 'refs/heads/main'
+    needs: [lint-and-unit-tests, integration-tests]
+    permissions:
+      contents: read
+      packages: write # needed to push to GitHub Container Registry
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/docshare-backend:latest
+            ghcr.io/${{ github.repository_owner }}/docshare-backend:${{ github.sha }}

@@ -11,10 +11,11 @@ export interface ShareRequest {
 export interface ShareResponse {
   id: string;
   documentId: string;
-  sharedWithUserId: string;
-  sharedWithEmail: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
   role: ShareRole;
-  createdAt: string;
+  grantedAt: string;
 }
 
 export interface ShareLinkRequest {
@@ -32,7 +33,7 @@ export interface ShareLinkResponse {
   expiresAt: string | null;
   hasPassword: boolean;
   downloadLimit: number | null;
-  downloadCount: number;
+  downloadsUsed: number;
   readOnly: boolean;
   createdAt: string;
 }

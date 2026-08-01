@@ -5,7 +5,6 @@ export function useShares(documentId: string) {
   return useQuery({
     queryKey: ["shares", documentId],
     queryFn: () => sharingApi.listShares(documentId),
-    enabled: false, // Disable until backend implements this endpoint
   });
 }
 
@@ -44,7 +43,6 @@ export function useShareLinks(documentId: string) {
   return useQuery({
     queryKey: ["shareLinks", documentId],
     queryFn: () => sharingApi.listShareLinks(documentId),
-    enabled: false, // Disable until backend implements this endpoint
   });
 }
 

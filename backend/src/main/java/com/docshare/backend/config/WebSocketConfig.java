@@ -1,5 +1,6 @@
 package com.docshare.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -19,12 +20,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
   private final PrincipalHandshakeHandler principalHandshakeHandler;
+  private final String[] allowedOrigins;
 
   public WebSocketConfig(
       JwtHandshakeInterceptor jwtHandshakeInterceptor,
-      PrincipalHandshakeHandler principalHandshakeHandler) {
+      PrincipalHandshakeHandler principalHandshakeHandler,
+      @Value("${docshare.cors.allowed-origins}") String allowedOrigins) {
     this.jwtHandshakeInterceptor = jwtHandshakeInterceptor;
     this.principalHandshakeHandler = principalHandshakeHandler;
+    this.allowedOrigins = allowedOrigins.split(",");
   }
 
   @Override
@@ -33,7 +37,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         .addEndpoint("/ws")
         .addInterceptors(jwtHandshakeInterceptor)
         .setHandshakeHandler(principalHandshakeHandler)
-        .setAllowedOrigins("http://localhost:3000")
+        .setAllowedOrigins(allowedOrigins) // same docshare.cors.allowed-origins as SecurityConfig
         .withSockJS();
   }
 

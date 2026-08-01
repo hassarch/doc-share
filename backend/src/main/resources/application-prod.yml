@@ -1,0 +1,19 @@
+# Production-profile overrides. Everything sensitive still comes from
+# environment variables (see application.yml's ${...} placeholders) -
+# this file only changes behavior that should differ between local dev
+# and a real environment, never secrets.
+
+logging:
+  level:
+    root: INFO
+    com.docshare.backend: INFO
+
+management:
+  endpoint:
+    health:
+      # Full dependency details (DB/Redis/Kafka connectivity) are useful
+      # for an authenticated operator, but shouldn't be visible on a
+      # public /actuator/health response - "when-authorized" already
+      # covers this in the base application.yml, kept explicit here as a
+      # reminder this matters more in prod than in local dev.
+      show-details: when-authorized
