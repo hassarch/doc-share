@@ -24,13 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Orchestrates document upload/download/rename/move/delete.
  *
- * <p><strong>Authorization scope:</strong> every method here checks
- * ownership only. Full RBAC via {@code sharing.entity.Permission}
- * (Viewer/Commenter/Editor/Owner, FR-1.8/4.2) is not wired in yet — that's
- * the Sharing module's job, deliberately not folded into this phase. A
- * document a Viewer has been granted access to will currently 404 for
- * them, which is a known, temporary gap, not a design decision to leave
- * permanently.
+ * <p><strong>Authorization scope:</strong> every method here checks ownership only. Full RBAC via
+ * {@code sharing.entity.Permission} (Viewer/Commenter/Editor/Owner, FR-1.8/4.2) is not wired in yet
+ * — that's the Sharing module's job, deliberately not folded into this phase. A document a Viewer
+ * has been granted access to will currently 404 for them, which is a known, temporary gap, not a
+ * design decision to leave permanently.
  */
 @Service
 public class DocumentService {
@@ -58,12 +56,11 @@ public class DocumentService {
   }
 
   /**
-   * Uploads a new document (FR-3.1). Hashes the content first and checks
-   * for an existing match (FR-9.2 dedup) before touching storage — see
-   * this class's Javadoc header comment in the Phase 6 write-up for why
-   * that ordering matters and why hashing reads the whole file into
-   * memory for now (acceptable at this phase's scale; streaming hashing
-   * is a Chunking-phase concern for large files).
+   * Uploads a new document (FR-3.1). Hashes the content first and checks for an existing match
+   * (FR-9.2 dedup) before touching storage — see this class's Javadoc header comment in the Phase 6
+   * write-up for why that ordering matters and why hashing reads the whole file into memory for now
+   * (acceptable at this phase's scale; streaming hashing is a Chunking-phase concern for large
+   * files).
    */
   @Transactional
   public Document upload(
