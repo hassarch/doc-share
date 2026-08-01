@@ -78,11 +78,10 @@ public class SecurityConfig {
   }
 
   /**
-   * Allowed origins come from {@code docshare.cors.allowed-origins}
-   * (env var {@code CORS_ALLOWED_ORIGINS}), not a hardcoded list — the
-   * frontend's real origin differs between local dev, a demo/staging
-   * environment, and production, and this must never silently default to
-   * {@code "*"} for a credentialed API.
+   * Allowed origins come from {@code docshare.cors.allowed-origins} (env var {@code
+   * CORS_ALLOWED_ORIGINS}), not a hardcoded list — the frontend's real origin differs between local
+   * dev, a demo/staging environment, and production, and this must never silently default to {@code
+   * "*"} for a credentialed API.
    */
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {

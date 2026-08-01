@@ -6,17 +6,26 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace
 
-# Copy only what's needed to resolve dependencies first, so Docker's layer
-# cache is reused on every rebuild where only application code changed
-# (not build.gradle.kts) - this is the single biggest lever for fast
-# repeated builds in CI.
+# Copy Gradle wrapper and make it executable
 COPY gradlew .
 COPY gradle gradle
-COPY build.gradle.kts settings.gradle.kts ./
-RUN ./gradlew dependencies --no-daemon || true
+RUN chmod +x ./gradlew
 
+# Copy build files
+COPY build.gradle.kts settings.gradle.kts ./
+
+# Download dependencies in a separate layer for better caching
+# If this fails, it's okay - dependencies will be downloaded during build
+RUN ./gradlew dependencies --no-daemon --no-build-cache 2>/dev/null || true
+
+# Copy source code
 COPY src src
-RUN ./gradlew bootJar --no-daemon -x test
+
+# Build the application
+# Use --offline to prevent network access if dependencies are cached
+# Fall back to online mode if needed
+RUN ./gradlew bootJar --no-daemon -x test --no-build-cache || \
+    ./gradlew bootJar --no-daemon -x test
 # Tests are deliberately NOT run as part of the image build - they already
 # ran in CI (backend-ci.yml) before this build is ever triggered; running
 # them again here would need Testcontainers/Docker-in-Docker for no

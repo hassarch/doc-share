@@ -26,6 +26,9 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
 RUN addgroup -S docshare && adduser -S docshare -G docshare
 USER docshare
 
@@ -37,6 +40,9 @@ COPY --from=build --chown=docshare:docshare /app/.next/static ./.next/static
 COPY --from=build --chown=docshare:docshare /app/public ./public
 
 EXPOSE 3000
+
+# Set hostname to bind to all interfaces (0.0.0.0) instead of container IP
+ENV HOSTNAME=0.0.0.0
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget -qO- http://localhost:3000 || exit 1

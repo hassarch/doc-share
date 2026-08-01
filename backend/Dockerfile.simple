@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1
+
+# ---- Simple Runtime-only Dockerfile ----
+# This version expects the JAR to be built on the host machine before
+# running docker build. Use this when Docker networking issues prevent
+# building inside the container.
+#
+# Build the jar first:
+#   ./gradlew bootJar -x test
+#
+# Then build the Docker image:
+#   docker build -f Dockerfile.simple -t docshare-backend .
+
+FROM eclipse-temurin:21-jre-alpine AS runtime
+WORKDIR /app
+
+# Runs as a dedicated non-root user
+RUN addgroup -S docshare && adduser -S docshare -G docshare
+USER docshare
+
+# Copy pre-built jar from host
+COPY --chown=docshare:docshare build/libs/docshare-backend.jar app.jar
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD wget -qO- http://localhost:8080/actuator/health | grep -q '"status":"UP"' || exit 1
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

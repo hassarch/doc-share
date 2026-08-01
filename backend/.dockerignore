@@ -1,5 +1,9 @@
-# Build artifacts
-build/
+# Build artifacts (but keep build/libs/*.jar for Dockerfile.simple)
+build/classes
+build/generated
+build/resources
+build/tmp
+build/test-results
 bin/
 .gradle/
 
