@@ -4,6 +4,31 @@
 
 A modern, full-stack document management system built with Next.js and Spring Boot, featuring real-time collaboration, advanced sharing controls, and distributed storage architecture.
 
+## 📂 Project Structure
+
+```
+docshare/
+├── scripts/          ← Build and utility scripts
+│   ├── build-all.sh     - Complete build with checks
+│   ├── quick-build.sh   - Fast rebuild
+│   ├── start-app.sh     - Start application
+│   └── health-check.sh  - Service health checks
+│
+├── docs/             ← All documentation
+│   ├── INDEX.md         - Documentation index
+│   ├── QUICKSTART.md    - Quick start guide
+│   └── BUILD_SCRIPTS.md - Build script guide
+│
+├── backend/          ← Spring Boot API
+├── frontend/         ← Next.js app
+└── infra/            ← Docker services
+```
+
+**Quick Links:**
+- 📜 [Scripts README](./scripts/README.md)
+- 📚 [Documentation Index](./docs/INDEX.md)
+- 🚀 [Quick Start Guide](./docs/QUICKSTART.md)
+
 ## 🎉 Phase 0 Complete!
 
 This implementation delivers a **production-quality foundation** with:
@@ -18,26 +43,36 @@ This implementation delivers a **production-quality foundation** with:
 
 ## 🚀 Quick Start
 
-Get running in **5 minutes**:
+Get running in **5 minutes** using our build scripts:
 
 ```bash
-# 1. Start PostgreSQL
-docker run -d --name docshare-db \
-  -e POSTGRES_DB=docshare \
-  -e POSTGRES_USER=docshare \
-  -e POSTGRES_PASSWORD=docshare123 \
-  -p 5432:5432 postgres:17
+# 1. Build everything
+./scripts/build-all.sh
+
+# 2. Start the application
+./scripts/start-app.sh
+
+# 3. Open browser
+# http://localhost:3000
+```
+
+**Or manually:**
+
+```bash
+# 1. Start Docker services
+cd infra && docker-compose up -d postgres redis minio kafka
 
 # 2. Start backend
-cd backend && ./gradlew bootRun
+cd ../backend && ./gradlew bootRun
 
 # 3. Start frontend (new terminal)
-cd frontend && npm install && npm run dev
+cd ../frontend && npm install && npm run dev
 ```
 
 Open **http://localhost:3000** and register a new account!
 
-📖 **Detailed guide**: [QUICKSTART.md](./QUICKSTART.md)
+📖 **Detailed guide**: [docs/QUICKSTART.md](./docs/QUICKSTART.md)  
+📜 **Script reference**: [scripts/README.md](./scripts/README.md)
 
 ## 📦 What's Inside
 
