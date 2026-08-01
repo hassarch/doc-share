@@ -7,6 +7,13 @@ spring:
     show-sql: false
   flyway:
     enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 60000
+      max-lifetime: 120000
+      idle-timeout: 60000
+      leak-detection-threshold: 60000
 
 docshare:
   cors:
@@ -33,3 +40,4 @@ logging:
     org.springframework: WARN
     org.hibernate: WARN
     org.testcontainers: INFO
+    com.zaxxer.hikari: DEBUG
