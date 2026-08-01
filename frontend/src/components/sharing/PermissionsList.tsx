@@ -40,10 +40,10 @@ export function PermissionsList({ shares, onRevoke, isRevoking }: PermissionsLis
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-graphite truncate">
-                  {share.sharedWithEmail}
+                  {share.userEmail}
                 </p>
                 <p className="text-xs text-graphite-soft">
-                  Shared {formatDate(share.createdAt)}
+                  Shared {formatDate(share.grantedAt)}
                 </p>
               </div>
             </div>

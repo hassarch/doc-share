@@ -104,6 +104,20 @@ tasks.register<Test>("integrationTest") {
 		includeTags("integration")
 	}
 	shouldRunAfter(tasks.test)
+	
+	// Run tests sequentially to avoid container resource conflicts
+	maxParallelForks = 1
+	
+	// Increase timeouts for slow CI environments
+	systemProperty("junit.jupiter.execution.timeout.default", "5m")
+	systemProperty("spring.test.context.cache.maxSize", "1")
+	
+	// More verbose test output
+	testLogging {
+		events("passed", "skipped", "failed", "standardOut", "standardError")
+		exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+		showStandardStreams = false
+	}
 }
 
 tasks.withType<BootJar> {

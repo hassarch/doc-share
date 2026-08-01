@@ -192,7 +192,7 @@ export function ShareLinkPanel({ document }: ShareLinkPanelProps) {
                     )}
                     {link.downloadLimit && (
                       <span>
-                        {link.downloadCount}/{link.downloadLimit} downloads
+                        {link.downloadsUsed}/{link.downloadLimit} downloads
                       </span>
                     )}
                   </div>

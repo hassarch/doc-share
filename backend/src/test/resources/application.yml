@@ -1,0 +1,43 @@
+# Test configuration - uses Testcontainers for all infrastructure
+# Properties are dynamically set by AbstractPostgresIntegrationTest
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 60000
+      max-lifetime: 120000
+      idle-timeout: 60000
+      leak-detection-threshold: 60000
+
+docshare:
+  cors:
+    allowed-origins: http://localhost:3000
+  jwt:
+    secret: test-secret-key-for-integration-tests-only-not-for-production-use
+    access-token-ttl-minutes: 15
+    refresh-token-ttl-days: 7
+  password-reset:
+    token-ttl-minutes: 30
+  storage:
+    # These will be overridden by @DynamicPropertySource in AbstractPostgresIntegrationTest
+    minio:
+      endpoint: http://localhost:9000
+      access-key: docshare_test
+      secret-key: docshare_test
+    bucket: documents-test
+    chunk-threshold-mb: 50
+    chunk-size-mb: 5
+
+logging:
+  level:
+    com.docshare: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.testcontainers: INFO
+    com.zaxxer.hikari: DEBUG

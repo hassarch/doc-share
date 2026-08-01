@@ -4,35 +4,62 @@ Get the distributed document sharing platform running in 5 minutes.
 
 ## Prerequisites
 
-- **Java 23+** (backend)
-- **Node.js 18+** (frontend)
-- **Docker** (for PostgreSQL)
+- **Docker Desktop** (for all services)
 - **Git**
 
-## Step 1: Clone & Navigate
+For local development without Docker:
+- **Java 21+** (backend)
+- **Node.js 18+** (frontend)
 
+## Quick Start (Docker - Recommended)
+
+### Step 1: Start Docker Desktop
+
+Make sure Docker Desktop is running:
 ```bash
-cd /Users/donut/Desktop/Dev/docshare
+open -a Docker
 ```
 
-## Step 2: Start PostgreSQL
+Wait ~15 seconds for Docker to fully start.
+
+### Step 2: Start All Services
 
 ```bash
-docker run -d \
-  --name docshare-db \
-  -e POSTGRES_DB=docshare \
-  -e POSTGRES_USER=docshare \
-  -e POSTGRES_PASSWORD=docshare123 \
-  -p 5432:5432 \
-  postgres:17
+cd /Users/donut/Desktop/Dev/docshare/infra
+docker-compose up -d
 ```
 
-Verify it's running:
+This starts:
+- PostgreSQL (database) - port 5432
+- Redis (cache) - port 6379
+- MinIO (object storage) - port 9000, 9001
+- Kafka (event streaming) - port 9092
+- Backend API - port 8080
+- Frontend web app - port 3000
+
+Verify services are running:
 ```bash
-docker ps | grep docshare-db
+docker ps
 ```
 
-## Step 3: Start Backend
+### Step 3: Access the Application
+
+Frontend: **http://localhost:3000**
+Backend API: **http://localhost:8080**
+MinIO Console: **http://localhost:9001** (user: `docshare`, password: `docshare123`)
+
+---
+
+## Local Development Setup (Without Docker)
+
+### Step 1: Start Infrastructure Services
+
+```bash
+cd infra
+docker-compose up -d postgres redis minio kafka
+```
+
+### Step 2: Start Backend Locally
 
 ```bash
 cd backend
@@ -43,7 +70,7 @@ Wait for: `Started BackendApplication in X.XXX seconds`
 
 Backend will be at: **http://localhost:8080**
 
-## Step 4: Start Frontend (New Terminal)
+### Step 3: Start Frontend Locally
 
 ```bash
 cd frontend
@@ -119,30 +146,53 @@ Frontend will be at: **http://localhost:3000**
 
 ## Stopping the Application
 
+### Docker Setup
+```bash
+# Stop all services
+cd infra
+docker-compose down
+
+# Stop and remove all data
+docker-compose down -v
+```
+
+### Local Development Setup
 ```bash
 # Stop frontend (Ctrl+C in terminal)
 
 # Stop backend (Ctrl+C in terminal)
 
-# Stop PostgreSQL
-docker stop docshare-db
-
-# Optional: Remove PostgreSQL container
-docker rm docshare-db
+# Stop infrastructure services
+cd infra
+docker-compose down
 ```
 
 ## Troubleshooting
+
+### Docker Desktop Issues
+```bash
+# Check Docker is running
+docker ps
+
+# If not running, start Docker Desktop
+open -a Docker
+
+# Wait 15-30 seconds, then try again
+```
 
 ### Backend won't start
 ```bash
 # Check if port 8080 is in use
 lsof -i :8080
 
-# Check PostgreSQL is running
-docker ps | grep docshare-db
+# Check all services are healthy
+docker ps
 
-# Check database connection
-docker exec -it docshare-db psql -U docshare -d docshare
+# View backend logs
+docker logs infra-backend-1
+
+# Restart backend container
+docker restart infra-backend-1
 ```
 
 ### Frontend won't start
@@ -150,34 +200,57 @@ docker exec -it docshare-db psql -U docshare -d docshare
 # Check if port 3000 is in use
 lsof -i :3000
 
-# Clear Next.js cache
-rm -rf .next
+# View frontend logs
+docker logs infra-frontend-1
 
-# Reinstall dependencies
-rm -rf node_modules package-lock.json
-npm install
+# Restart frontend container
+docker restart infra-frontend-1
 ```
 
 ### Can't connect to backend
 ```bash
-# Verify .env.local exists
-cat .env.local
-
-# Should show:
-# NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
-
-# Check backend health
+# Check backend is responding
 curl http://localhost:8080/api/v1/auth/login
-# Should return 401 or 400, not 404
+# Should return 401 or 400, not connection refused
+
+# Check container status
+docker ps | grep backend
+
+# Check logs for errors
+docker logs infra-backend-1 --tail 50
 ```
 
 ### Database issues
 ```bash
-# Reset database
-docker stop docshare-db
-docker rm docshare-db
+# View database logs
+docker logs infra-postgres-1
 
-# Restart from Step 2
+# Connect to database
+docker exec -it infra-postgres-1 psql -U docshare -d docshare
+
+# Reset database (WARNING: deletes all data)
+docker-compose down -v
+docker-compose up -d
+```
+
+### MinIO/Storage issues
+```bash
+# Access MinIO console
+open http://localhost:9001
+# Login: docshare / docshare123
+
+# View MinIO logs
+docker logs infra-minio-1
+```
+
+### Kafka issues
+```bash
+# View Kafka logs
+docker logs infra-kafka-1
+
+# Check Kafka topics
+docker exec -it infra-kafka-1 /opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server localhost:9092 --list
 ```
 
 ## Next Steps

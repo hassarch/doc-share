@@ -46,3 +46,30 @@ jobs:
         # without needing a real value for CI's purposes (this build is
         # only proving compilation, not being deployed).
         run: npm run build
+
+  docker-build:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [lint-typecheck-build]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/docshare-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/docshare-frontend:${{ github.sha }}

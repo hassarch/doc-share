@@ -17,10 +17,11 @@ infra/*.local.yml
 
 # ==== Shared: env / secrets — never commit real secrets ====
 .env
-.env.local
-*.env
-!.env.example
-!**/.env.example
+.env.*
+# Any file ending in .example is a template, safe (and meant) to commit -
+# covers .env.example, .env.prod.example, etc. without needing to name
+# each one individually and risk missing a future one.
+!**/*.example
 
 # ==== Shared: OS ====
 .DS_Store
