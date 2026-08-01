@@ -35,7 +35,7 @@ import org.testcontainers.utility.DockerImageName;
  * within a single JVM run instead of paying startup cost per test class.
  */
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @AutoConfigureMockMvc
 @Tag("integration")
 public abstract class AbstractPostgresIntegrationTest {
@@ -46,7 +46,7 @@ public abstract class AbstractPostgresIntegrationTest {
           .withDatabaseName("docshare_test")
           .withUsername("docshare_test")
           .withPassword("docshare_test")
-          .withReuse(false) // Don't reuse containers between runs
+          .withReuse(true) // Reuse containers - critical for shared Spring context
           .withStartupTimeout(Duration.ofMinutes(2))
           .waitingFor(
               Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 2));
@@ -55,7 +55,7 @@ public abstract class AbstractPostgresIntegrationTest {
   static final GenericContainer<?> REDIS =
       new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
           .withExposedPorts(6379)
-          .withReuse(false)
+          .withReuse(true)
           .withStartupTimeout(Duration.ofMinutes(1))
           .waitingFor(Wait.forListeningPort());
 
@@ -66,14 +66,14 @@ public abstract class AbstractPostgresIntegrationTest {
           .withEnv("MINIO_ROOT_USER", "docshare_test")
           .withEnv("MINIO_ROOT_PASSWORD", "docshare_test")
           .withExposedPorts(9000)
-          .withReuse(false)
+          .withReuse(true)
           .withStartupTimeout(Duration.ofMinutes(1))
           .waitingFor(Wait.forHttp("/minio/health/live").forPort(9000));
 
   @Container
   static final KafkaContainer KAFKA =
       new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.1"))
-          .withReuse(false)
+          .withReuse(true)
           .withStartupTimeout(Duration.ofMinutes(2));
 
   @DynamicPropertySource
