@@ -1,5 +1,6 @@
 package com.docshare.backend.sharing.controller;
 
+import com.docshare.backend.common.util.CurrentUser;
 import com.docshare.backend.sharing.dto.CreateShareRequest;
 import com.docshare.backend.sharing.dto.ShareResponse;
 import com.docshare.backend.sharing.service.SharingService;
@@ -36,6 +37,10 @@ public class ShareController {
    * <p>Request body: { "documentId": "uuid", "email": "user@example.com", "role": "VIEWER" }
    */
   @PostMapping("/shares")
+  public ResponseEntity<ShareResponse> createShare(@Valid @RequestBody CreateShareRequest request) {
+    ShareResponse response =
+        sharingService.createShare(
+            CurrentUser.id(), request.documentId(), request.email(), request.role());
   public ResponseEntity<ShareResponse> createShare(
       @Valid @RequestBody CreateShareRequest request, @AuthenticationPrincipal String userId) {
     ShareResponse response =
