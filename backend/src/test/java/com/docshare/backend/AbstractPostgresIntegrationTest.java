@@ -89,6 +89,7 @@ public abstract class AbstractPostgresIntegrationTest {
         () -> "http://" + MINIO.getHost() + ":" + MINIO.getMappedPort(9000));
     registry.add("docshare.storage.minio.access-key", () -> "docshare_test");
     registry.add("docshare.storage.minio.secret-key", () -> "docshare_test");
+    registry.add("docshare.storage.bucket", () -> "documents-test");
 
     registry.add("spring.kafka.bootstrap-servers", KAFKA::getBootstrapServers);
   }
