@@ -1,28 +1,104 @@
 @import "tailwindcss";
 
 :root {
-  /* Base surfaces */
-  --color-ink: #1b2430;       /* dark slate - sidebar, topbar */
-  --color-ink-soft: #29323d;  /* hover/active state on dark surfaces */
-  --color-fog: #eef1f3;       /* light content background */
-  --color-paper: #ffffff;     /* card background */
+  /* Primary Brand Colors */
+  --primary-50: #e6f4f1;
+  --primary-100: #b3e0d8;
+  --primary-500: #2f7a6e;
+  --primary-600: #256354;
+  --primary-700: #1b4a3e;
 
-  /* Text */
-  --color-graphite: #232a31;  /* primary text on light surfaces */
-  --color-graphite-soft: #5b6670; /* secondary text, metadata */
-  --color-mist: #c7d0d6;      /* text on dark surfaces */
+  /* Neutral Palette */
+  --neutral-0: #ffffff;
+  --neutral-50: #f8f9fa;
+  --neutral-100: #f1f3f5;
+  --neutral-200: #e9ecef;
+  --neutral-300: #dee2e6;
+  --neutral-400: #ced4da;
+  --neutral-500: #adb5bd;
+  --neutral-600: #6c757d;
+  --neutral-700: #495057;
+  --neutral-800: #343a40;
+  --neutral-900: #212529;
 
-  /* Accent */
-  --color-teal: #2f7a6e;      /* primary accent: buttons, links, active nav */
-  --color-teal-soft: #e3efec; /* teal tint background (badges, focus rings) */
-  --color-amber: #c97a2b;     /* pending / warning */
-  --color-brick: #b23a2e;     /* failed / destructive */
+  /* Semantic Colors */
+  --success-50: #d1e7dd;
+  --success-500: #198754;
+  --success-700: #146c43;
 
-  /* Structure */
-  --color-hairline: #dce1e4;  /* dividers in the manifest table */
+  --warning-50: #fff3cd;
+  --warning-500: #ffc107;
+  --warning-700: #cc9a06;
+
+  --error-50: #f8d7da;
+  --error-500: #dc3545;
+  --error-700: #b02a37;
+
+  --info-50: #cff4fc;
+  --info-500: #0dcaf0;
+  --info-700: #0aa2c0;
+
+  /* Legacy colors (for migration) */
+  --color-ink: #1b2430;
+  --color-ink-soft: #29323d;
+  --color-fog: #f8f9fa;
+  --color-paper: #ffffff;
+  --color-graphite: #232a31;
+  --color-graphite-soft: #5b6670;
+  --color-mist: #c7d0d6;
+  --color-teal: #2f7a6e;
+  --color-teal-soft: #e3efec;
+  --color-amber: #c97a2b;
+  --color-brick: #b23a2e;
+  --color-hairline: #dce1e4;
+
+  /* Elevation Shadows */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;   /* 6px */
+  --radius-md: 0.5rem;     /* 8px */
+  --radius-lg: 0.75rem;    /* 12px */
+  --radius-xl: 1rem;       /* 16px */
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @theme inline {
+  /* Map new colors to Tailwind */
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+
+  --color-neutral-0: var(--neutral-0);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+
+  --color-success: var(--success-500);
+  --color-warning: var(--warning-500);
+  --color-error: var(--error-500);
+  --color-info: var(--info-500);
+
+  /* Legacy mappings */
   --color-ink: var(--color-ink);
   --color-ink-soft: var(--color-ink-soft);
   --color-fog: var(--color-fog);
@@ -42,22 +118,58 @@
 }
 
 body {
-  background: var(--color-fog);
-  color: var(--color-graphite);
+  background: var(--neutral-50);
+  color: var(--neutral-900);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Visible keyboard focus everywhere - not just the browser default outline,
-   but not removed either. */
+/* Focus styles */
 :focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--primary-500);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
+/* Selection */
+::selection {
+  background-color: var(--primary-100);
+  color: var(--primary-700);
+}
+
+/* Scrollbar (Webkit) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neutral-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-400);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-500);
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
   }
 }
