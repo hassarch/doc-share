@@ -118,7 +118,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                 <div className="px-3 py-6 text-center">
                   <Bell className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
                   <p className="text-sm text-neutral-600">No new notifications</p>
-                  <p className="text-xs text-neutral-500 mt-1">You're all caught up!</p>
+                  <p className="text-xs text-neutral-500 mt-1">You&apos;re all caught up!</p>
                 </div>
               </div>
             </DropdownMenu.Content>
