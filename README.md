@@ -1,4 +1,4 @@
-# 📄 DocShare - Secure Document Management Platform
+# DocShare - Secure Document Management Platform
 
 A modern, full-stack document management and sharing platform built with Next.js, Spring Boot, and PostgreSQL. DocShare provides secure file storage, real-time collaboration, and granular sharing controls for teams and individuals.
 
@@ -8,37 +8,37 @@ A modern, full-stack document management and sharing platform built with Next.js
 
 ---
 
-## 🌟 Features
+## Features
 
 ### Core Functionality
-- ✅ **Secure File Upload & Storage** - Upload documents with drag & drop support
-- ✅ **Folder Organization** - Hierarchical folder structure for document organization
-- ✅ **Multiple View Modes** - Grid, list, and table views for file browsing
-- ✅ **File Sharing** - Share documents with users via email with role-based permissions
-- ✅ **Share Links** - Generate temporary share links with expiration and password protection
-- ✅ **Bulk Operations** - Select and manage multiple files simultaneously
-- ✅ **Real-time Updates** - React Query for optimistic updates and cache management
-- ✅ **Audit Logging** - Complete audit trail of all document activities
+- **Secure File Upload & Storage** - Upload documents with drag & drop support
+- **Folder Organization** - Hierarchical folder structure for document organization
+- **Multiple View Modes** - Grid, list, and table views for file browsing
+- **File Sharing** - Share documents with users via email with role-based permissions
+- **Share Links** - Generate temporary share links with expiration and password protection
+- **Bulk Operations** - Select and manage multiple files simultaneously
+- **Real-time Updates** - React Query for optimistic updates and cache management
+- **Audit Logging** - Complete audit trail of all document activities
 
 ### User Experience
-- 🎨 **Modern UI/UX** - Clean, professional interface with smooth animations
-- 📱 **Fully Responsive** - Perfect experience on mobile, tablet, and desktop
-- ♿ **Accessible** - WCAG 2.1 AA compliant with keyboard navigation
-- 🌙 **Multiple Themes** - Light mode (dark mode ready)
-- 🔍 **Search** - Global search across documents (coming soon)
-- 🔔 **Notifications** - In-app toast notifications for user actions
+- **Modern UI/UX** - Clean, professional interface with smooth animations
+- **Fully Responsive** - Perfect experience on mobile, tablet, and desktop
+- **Accessible** - WCAG 2.1 AA compliant with keyboard navigation
+- **Multiple Themes** - Light mode (dark mode ready)
+- **Search** - Global search across documents (coming soon)
+- **Notifications** - In-app toast notifications for user actions
 
 ### Security & Authentication
-- 🔐 **JWT Authentication** - Secure token-based authentication
-- 🔑 **Refresh Tokens** - Long-lived sessions with automatic token refresh
-- 🛡️ **Role-Based Access Control** - Fine-grained permissions (OWNER, EDITOR, VIEWER)
-- 🔒 **Password Reset** - Secure password reset flow with email verification
-- 🚫 **CORS Protection** - Configured CORS policies
-- 📝 **Audit Trail** - Complete activity logging for compliance
+- **JWT Authentication** - Secure token-based authentication
+- **Refresh Tokens** - Long-lived sessions with automatic token refresh
+- **Role-Based Access Control** - Fine-grained permissions (OWNER, EDITOR, VIEWER)
+- **Password Reset** - Secure password reset flow with email verification
+- **CORS Protection** - Configured CORS policies
+- **Audit Trail** - Complete activity logging for compliance
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Technology Stack
 
@@ -71,7 +71,7 @@ A modern, full-stack document management and sharing platform built with Next.js
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -150,7 +150,7 @@ We provide convenient scripts for building and running the application:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 docshare/
@@ -212,7 +212,7 @@ docshare/
 
 ---
 
-## 🔧 Configuration
+## Configuration
 
 ### Backend Configuration
 
@@ -256,7 +256,7 @@ NEXT_PUBLIC_ENABLE_DEBUG=true
 
 ---
 
-## 🔑 API Documentation
+## API Documentation
 
 ### Authentication Endpoints
 
@@ -364,7 +364,7 @@ For complete API documentation, see [API.md](docs/API.md).
 
 ---
 
-## 🎨 UI Components Library
+## UI Components Library
 
 DocShare includes a comprehensive component library with 10+ reusable components:
 
@@ -411,7 +411,7 @@ function MyComponent() {
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Backend Testing
 
@@ -445,7 +445,7 @@ npm run build
 
 ---
 
-## 📦 Building for Production
+## Building for Production
 
 ### Backend Production Build
 
@@ -486,7 +486,7 @@ docker-compose down
 
 ---
 
-## 🔐 Security Best Practices
+## Security Best Practices
 
 ### Implemented Security Measures
 
@@ -529,7 +529,7 @@ docker-compose down
 
 ---
 
-## 📊 Performance Optimization
+## Performance Optimization
 
 ### Frontend Optimizations
 
@@ -557,7 +557,7 @@ docker-compose down
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -597,7 +597,7 @@ cat backend/src/main/resources/application.properties
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please follow these guidelines:
 
@@ -644,13 +644,13 @@ We welcome contributions! Please follow these guidelines:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👥 Authors & Acknowledgments
+## Authors & Acknowledgments
 
 ### Core Team
 - **Backend Development**: Spring Boot, Security, Database
@@ -666,7 +666,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📞 Support & Contact
+## Support & Contact
 
 - **Issues**: [GitHub Issues](https://github.com/yourusername/docshare/issues)
 - **Documentation**: [docs/](docs/)
@@ -675,14 +675,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 ### Current Version (v1.0.0)
-- ✅ Core document management
-- ✅ File sharing with permissions
-- ✅ Share links
-- ✅ Audit logging
-- ✅ Modern UI/UX
+- Core document management
+- File sharing with permissions
+- Share links
+- Audit logging
+- Modern UI/UX
 
 ### Coming Soon (v1.1.0)
 - [ ] Real-time collaboration
@@ -702,7 +702,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📈 Project Status
+## Project Status
 
 ![Build Status](https://img.shields.io/badge/build-passing-success)
 ![Tests](https://img.shields.io/badge/tests-passing-success)
@@ -715,7 +715,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## ⭐ Star History
+## Star History
 
 If you find this project useful, please consider giving it a star on GitHub!
 
@@ -724,13 +724,13 @@ If you find this project useful, please consider giving it a star on GitHub!
 ---
 
 <p align="center">
-  Made with ❤️ by the DocShare Team
+  Made with care by the DocShare Team
 </p>
 
 <p align="center">
-  <a href="#-features">Features</a> •
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-api-documentation">API Docs</a> •
-  <a href="#-contributing">Contributing</a> •
-  <a href="#-license">License</a>
+  <a href="#features">Features</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#api-documentation">API Docs</a> •
+  <a href="#contributing">Contributing</a> •
+  <a href="#license">License</a>
 </p>
