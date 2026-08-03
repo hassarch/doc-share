@@ -650,32 +650,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## Authors & Acknowledgments
-
-### Core Team
-- **Backend Development**: Spring Boot, Security, Database
-- **Frontend Development**: Next.js, UI/UX Design
-- **DevOps**: Infrastructure, CI/CD
-
-### Special Thanks
-- Next.js team for the amazing framework
-- Spring Boot team for the robust backend framework
-- Radix UI for accessible component primitives
-- Lucide for beautiful icons
-- Tailwind CSS for utility-first styling
-
----
-
-## Support & Contact
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/docshare/issues)
-- **Documentation**: [docs/](docs/)
-- **Email**: support@docshare.example.com
-- **Discord**: [Join our community](#)
-
----
-
-## Roadmap
+## Project Status
 
 ### Current Version (v1.0.0)
 - Core document management
@@ -715,16 +690,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## Star History
-
-If you find this project useful, please consider giving it a star on GitHub!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/docshare&type=Date)](https://star-history.com/#yourusername/docshare&Date)
-
----
-
 <p align="center">
-  Made with care by the DocShare Team
+  Made with a lot of caffeine
 </p>
 
 <p align="center">
