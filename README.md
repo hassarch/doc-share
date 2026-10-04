@@ -1,73 +1,282 @@
-# DocShare - Secure Document Management Platform
+# DocShare
 
-A modern, full-stack document management and sharing platform built with Next.js, Spring Boot, and PostgreSQL. DocShare provides secure file storage, real-time collaboration, and granular sharing controls for teams and individuals.
+**Secure Document Management & Collaboration Platform**
 
-![Status](https://img.shields.io/badge/status-production--ready-success)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+A production-ready document management system built with Next.js, Spring Boot, and PostgreSQL. Features secure file storage, real-time collaboration, granular permission controls, and comprehensive audit logging.
+
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Architecture](#architecture)
+- [Technology Stack](#technology-stack)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [API Reference](#api-reference)
+- [Development](#development)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
 ## Features
 
 ### Core Functionality
-- **Secure File Upload & Storage** - Upload documents with drag & drop support
-- **Folder Organization** - Hierarchical folder structure for document organization
-- **Multiple View Modes** - Grid, list, and table views for file browsing
-- **File Sharing** - Share documents with users via email with role-based permissions
-- **Share Links** - Generate temporary share links with expiration and password protection
-- **Bulk Operations** - Select and manage multiple files simultaneously
-- **Real-time Updates** - React Query for optimistic updates and cache management
-- **Audit Logging** - Complete audit trail of all document activities
-
-### User Experience
-- **Modern UI/UX** - Clean, professional interface with smooth animations
-- **Fully Responsive** - Perfect experience on mobile, tablet, and desktop
-- **Accessible** - WCAG 2.1 AA compliant with keyboard navigation
-- **Multiple Themes** - Light mode (dark mode ready)
-- **Search** - Global search across documents (coming soon)
-- **Notifications** - In-app toast notifications for user actions
+- **Secure File Upload & Storage** - Drag & drop support with SHA-256 integrity verification
+- **Hierarchical Folder Structure** - Organize documents with nested folders and breadcrumb navigation
+- **Multiple View Modes** - Grid, list, and table views for optimal browsing
+- **Document Sharing** - Share with users via email with role-based permissions (OWNER, EDITOR, VIEWER)
+- **Public Share Links** - Generate temporary links with expiration, password protection, and access limits
+- **Bulk Operations** - Multi-select, move, delete, and download multiple files
+- **Real-time Updates** - Optimistic UI updates with React Query cache invalidation
 
 ### Security & Authentication
-- **JWT Authentication** - Secure token-based authentication
-- **Refresh Tokens** - Long-lived sessions with automatic token refresh
-- **Role-Based Access Control** - Fine-grained permissions (OWNER, EDITOR, VIEWER)
-- **Password Reset** - Secure password reset flow with email verification
-- **CORS Protection** - Configured CORS policies
-- **Audit Trail** - Complete activity logging for compliance
+- **JWT Authentication** - Stateless auth with HMAC-SHA256 signing
+- **Refresh Token Flow** - 7-day refresh tokens with automatic rotation
+- **Role-Based Access Control** - Fine-grained permissions at document and folder levels
+- **Password Security** - BCrypt hashing (strength 12) with secure reset flow
+- **Audit Trail** - Complete activity logging via Kafka event streams
+
+### User Experience
+- **Modern Interface** - Professional UI with smooth animations
+- **Fully Responsive** - Seamless experience across all devices
+- **Accessible** - WCAG 2.1 AA compliant with keyboard navigation
+- **Theme Support** - Light mode (dark mode ready)
 
 ---
 
 ## Architecture
 
-### Technology Stack
+### System Overview
 
-#### Frontend
-- **Framework**: Next.js 16 with App Router
-- **Language**: TypeScript (strict mode)
-- **Styling**: Tailwind CSS v4
-- **State Management**: React Query (TanStack Query)
-- **UI Components**: Custom component library + Radix UI primitives
-- **Icons**: Lucide React
-- **Forms**: React Hook Form + Zod validation
-- **HTTP Client**: Axios with interceptors
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        Browser[Browser Client]
+        NextJS[Next.js 16 Frontend]
+    end
+    
+    subgraph "Application Layer"
+        API[API Controllers]
+        Services[Business Services]
+        Repos[Data Repositories]
+    end
+    
+    subgraph "Data Layer"
+        PostgreSQL[(PostgreSQL 16)]
+        Redis[(Redis Cache)]
+        Storage[File Storage]
+    end
+    
+    subgraph "Infrastructure"
+        Kafka[Kafka Event Bus]
+        Audit[Audit Service]
+    end
+    
+    Browser --> NextJS
+    NextJS -->|REST API + JWT| API
+    API --> Services
+    Services --> Repos
+    Repos --> PostgreSQL
+    Services --> Redis
+    Services --> Storage
+    Services -->|Events| Kafka
+    Kafka --> Audit
+    Audit --> PostgreSQL
+    
+    style Browser fill:#e1f5ff
+    style NextJS fill:#e1f5ff
+    style API fill:#fff4e6
+    style Services fill:#fff4e6
+    style Repos fill:#fff4e6
+    style PostgreSQL fill:#e8f5e9
+    style Redis fill:#e8f5e9
+    style Storage fill:#e8f5e9
+    style Kafka fill:#f3e5f5
+    style Audit fill:#f3e5f5
+```
 
-#### Backend
-- **Framework**: Spring Boot 3.4
-- **Language**: Java 21
-- **Database**: PostgreSQL 16
-- **ORM**: Spring Data JPA with Hibernate
-- **Security**: Spring Security with JWT
-- **Storage**: Local filesystem (S3-ready architecture)
-- **API Docs**: Javadoc + package-info files
-- **Build Tool**: Gradle with Kotlin DSL
-- **Messaging**: Kafka for audit events
+### Authentication Flow
 
-#### DevOps & Tools
-- **Version Control**: Git
-- **Package Manager**: npm (frontend), Gradle (backend)
-- **Code Quality**: ESLint, Prettier, Spotless
-- **Database Migration**: Liquibase (ready for implementation)
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant Auth Service
+    participant Database
+    participant Redis
+    
+    Client->>API: POST /auth/login (email, password)
+    API->>Auth Service: Authenticate
+    Auth Service->>Database: Verify user credentials
+    Database-->>Auth Service: User data
+    Auth Service->>Auth Service: Generate JWT tokens
+    Auth Service->>Redis: Store refresh token
+    Auth Service-->>API: Access + Refresh tokens
+    API-->>Client: 200 OK (tokens)
+    
+    Note over Client: Token expires after 15 min
+    
+    Client->>API: Request with expired token
+    API-->>Client: 401 Unauthorized
+    Client->>API: POST /auth/refresh (refreshToken)
+    API->>Auth Service: Validate refresh token
+    Auth Service->>Redis: Check token validity
+    Redis-->>Auth Service: Valid
+    Auth Service->>Auth Service: Generate new access token
+    Auth Service-->>API: New access token
+    API-->>Client: 200 OK (new token)
+```
+
+### Data Model
+
+```mermaid
+erDiagram
+    users ||--o{ documents : owns
+    users ||--o{ folders : owns
+    users ||--o{ shares : creates
+    users ||--o{ shares : receives
+    users ||--o{ refresh_tokens : has
+    documents ||--o{ shares : "shared via"
+    documents ||--o{ share_links : "linked via"
+    documents }o--|| folders : "contained in"
+    folders }o--o| folders : "parent-child"
+    
+    users {
+        uuid id PK
+        string email UK
+        string password_hash
+        string name
+        timestamp created_at
+    }
+    
+    documents {
+        uuid id PK
+        string filename
+        bigint size_bytes
+        string mime_type
+        string sha256_hash
+        uuid owner_id FK
+        uuid folder_id FK
+        string storage_path
+        timestamp created_at
+    }
+    
+    folders {
+        uuid id PK
+        string name
+        uuid owner_id FK
+        uuid parent_id FK
+        timestamp created_at
+    }
+    
+    shares {
+        uuid id PK
+        uuid document_id FK
+        uuid shared_by_id FK
+        uuid shared_with_id FK
+        string role
+        timestamp created_at
+    }
+    
+    share_links {
+        uuid id PK
+        string token UK
+        uuid document_id FK
+        uuid created_by_id FK
+        timestamp expires_at
+        string password_hash
+        int max_access_count
+        int current_access_count
+        boolean read_only
+    }
+    
+    refresh_tokens {
+        uuid token PK
+        uuid user_id FK
+        timestamp expires_at
+        boolean revoked
+    }
+```
+
+### Module Structure
+
+```mermaid
+graph LR
+    subgraph "Backend Modules"
+        Auth[Auth Module]
+        Users[Users Module]
+        Docs[Documents Module]
+        Share[Sharing Module]
+        Audit[Audit Module]
+        Common[Common Module]
+    end
+    
+    Auth --> Common
+    Users --> Common
+    Docs --> Users
+    Docs --> Common
+    Share --> Docs
+    Share --> Users
+    Share --> Common
+    Audit --> Common
+    
+    style Auth fill:#bbdefb
+    style Users fill:#c8e6c9
+    style Docs fill:#fff9c4
+    style Share fill:#f8bbd0
+    style Audit fill:#d1c4e9
+    style Common fill:#e0e0e0
+```
+
+---
+
+## Technology Stack
+
+### Frontend
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Framework | Next.js | 16.2.12 |
+| Runtime | React | 19.2.4 |
+| Language | TypeScript | 5.x |
+| Styling | Tailwind CSS | 4.x |
+| State Management | TanStack Query | 5.101.4 |
+| UI Components | Radix UI | Latest |
+| Form Handling | React Hook Form | 7.83.0 |
+| Validation | Zod | 3.25.76 |
+
+### Backend
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Framework | Spring Boot | 3.3.4 |
+| Language | Java | 21 LTS |
+| Database | PostgreSQL | 16+ |
+| ORM | Spring Data JPA | (Hibernate) |
+| Security | Spring Security | 6.x |
+| Auth | JWT (JJWT) | 0.12.6 |
+| Messaging | Spring Kafka | 3.x |
+| Cache | Spring Data Redis | Latest |
+| Build Tool | Gradle (Kotlin DSL) | 8.x |
+
+### Infrastructure
+
+- **Database**: PostgreSQL 16 with JSONB support
+- **Cache**: Redis for refresh tokens and session data
+- **Message Queue**: Apache Kafka for audit events
+- **Object Storage**: Local filesystem (MinIO ready)
+- **Monitoring**: Prometheus + Grafana (ready)
 
 ---
 
@@ -75,139 +284,89 @@ A modern, full-stack document management and sharing platform built with Next.js
 
 ### Prerequisites
 
-- **Node.js**: 18.x or higher
-- **npm**: 9.x or higher
-- **Java**: 21 or higher
-- **PostgreSQL**: 16.x or higher
-- **Kafka**: 3.x (optional, for audit logging)
+- **Node.js** 18+ (20 LTS recommended)
+- **Java** 21 LTS
+- **PostgreSQL** 16+
+- **npm** 9+
 
 ### Installation
 
-#### 1. Clone the Repository
+#### 1. Clone Repository
+
 ```bash
 git clone https://github.com/yourusername/docshare.git
 cd docshare
 ```
 
-#### 2. Backend Setup
+#### 2. Setup Database
 
 ```bash
-# Navigate to backend directory
-cd backend
-
 # Create PostgreSQL database
 createdb docshare
 
-# Configure application properties
-cp src/main/resources/application.properties.example src/main/resources/application.properties
-# Edit application.properties with your database credentials
+# Verify connection
+psql -d docshare -c "SELECT version();"
+```
 
-# Build the project
+#### 3. Backend Setup
+
+```bash
+cd backend
+
+# Configure database connection
+cat > src/main/resources/application.properties << EOF
+server.port=8080
+spring.datasource.url=jdbc:postgresql://localhost:5432/docshare
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+jwt.secret=$(openssl rand -base64 64 | tr -d '\n')
+jwt.access-token-expiration=900000
+jwt.refresh-token-expiration=604800000
+file.upload-dir=./uploads
+spring.servlet.multipart.max-file-size=100MB
+spring.servlet.multipart.max-request-size=100MB
+EOF
+
+# Build and run
 ./gradlew build
-
-# Run the backend
 ./gradlew bootRun
 ```
 
-Backend will start on `http://localhost:8080`
+Backend running at `http://localhost:8080`
 
-#### 3. Frontend Setup
+#### 4. Frontend Setup
 
 ```bash
-# Navigate to frontend directory
 cd frontend
 
 # Install dependencies
 npm install
 
-# Configure environment variables
-cp .env.local.example .env.local
-# Edit .env.local with your API URL
+# Configure environment
+cat > .env.local << EOF
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+EOF
 
-# Run development server
+# Start development server
 npm run dev
 ```
 
-Frontend will start on `http://localhost:3000`
+Frontend running at `http://localhost:3000`
 
-### Using Quick Start Scripts
-
-We provide convenient scripts for building and running the application:
+### Verify Installation
 
 ```bash
-# Build everything (backend + frontend)
-./scripts/build-all.sh
+# Backend health check
+curl http://localhost:8080/actuator/health
 
-# Quick rebuild (skip tests)
-./scripts/quick-build.sh
-
-# Start both backend and frontend
-./scripts/start-app.sh
-
-# Check health of services
-./scripts/health-check.sh
-```
-
----
-
-## Project Structure
-
-```
-docshare/
-├── backend/                    # Spring Boot backend
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/docshare/backend/
-│   │   │   │   ├── auth/             # Authentication & JWT
-│   │   │   │   ├── users/            # User management
-│   │   │   │   ├── documents/        # Document storage
-│   │   │   │   ├── sharing/          # Sharing & permissions
-│   │   │   │   ├── audit/            # Audit logging
-│   │   │   │   └── common/           # Common utilities
-│   │   │   └── resources/
-│   │   │       └── application.properties
-│   │   └── test/                      # Integration tests
-│   ├── build.gradle.kts               # Gradle build config
-│   └── README.md
-│
-├── frontend/                   # Next.js frontend
-│   ├── src/
-│   │   ├── app/                       # Next.js app router
-│   │   │   ├── (app)/                # Authenticated routes
-│   │   │   │   ├── dashboard/
-│   │   │   │   ├── documents/
-│   │   │   │   ├── shared/
-│   │   │   │   └── starred/
-│   │   │   ├── login/
-│   │   │   ├── register/
-│   │   │   └── layout.tsx
-│   │   ├── components/                # React components
-│   │   │   ├── ui/                    # UI component library
-│   │   │   ├── layout/                # Layout components
-│   │   │   ├── documents/             # Document components
-│   │   │   ├── sharing/               # Sharing components
-│   │   │   └── common/                # Common components
-│   │   ├── context/                   # React context
-│   │   ├── hooks/                     # Custom hooks
-│   │   ├── lib/                       # Utilities & API clients
-│   │   └── types/                     # TypeScript types
-│   ├── public/                        # Static assets
-│   ├── package.json
-│   └── README.md
-│
-├── docs/                       # Documentation
-│   ├── ARCHITECTURE.md
-│   ├── UI_REDESIGN_COMPLETE.md
-│   ├── BUILD_SCRIPTS.md
-│   └── ...
-│
-├── scripts/                    # Utility scripts
-│   ├── build-all.sh
-│   ├── quick-build.sh
-│   ├── start-app.sh
-│   └── health-check.sh
-│
-└── README.md                   # This file
+# Create test user
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "SecurePass123",
+    "name": "Test User"
+  }'
 ```
 
 ---
@@ -219,26 +378,37 @@ docshare/
 Edit `backend/src/main/resources/application.properties`:
 
 ```properties
-# Server Configuration
+# Server
 server.port=8080
 
-# Database Configuration
+# Database
 spring.datasource.url=jdbc:postgresql://localhost:5432/docshare
 spring.datasource.username=your_username
 spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
 
-# JWT Configuration
-jwt.secret=your-secret-key-here-make-it-long-and-random
-jwt.access-token-expiration=900000         # 15 minutes
-jwt.refresh-token-expiration=2592000000    # 30 days
+# JWT
+jwt.secret=your-256-bit-secret-key
+jwt.access-token-expiration=900000
+jwt.refresh-token-expiration=604800000
 
-# File Upload Configuration
+# File Upload
 file.upload-dir=./uploads
 spring.servlet.multipart.max-file-size=100MB
 spring.servlet.multipart.max-request-size=100MB
 
-# Kafka Configuration (optional)
+# Redis (optional)
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+
+# Kafka (optional)
 spring.kafka.bootstrap-servers=localhost:9092
+
+# CORS
+cors.allowed-origins=http://localhost:3000
+
+# Logging
+logging.level.com.docshare.backend=DEBUG
 ```
 
 ### Frontend Configuration
@@ -246,21 +416,18 @@ spring.kafka.bootstrap-servers=localhost:9092
 Edit `frontend/.env.local`:
 
 ```bash
-# API Configuration
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
-
-# Feature Flags (optional)
-NEXT_PUBLIC_ENABLE_ANALYTICS=false
 NEXT_PUBLIC_ENABLE_DEBUG=true
+NEXT_PUBLIC_MAX_FILE_SIZE=104857600
 ```
 
 ---
 
-## API Documentation
+## API Reference
 
-### Authentication Endpoints
+### Authentication
 
-#### Register
+**Register**
 ```http
 POST /api/v1/auth/register
 Content-Type: application/json
@@ -272,7 +439,7 @@ Content-Type: application/json
 }
 ```
 
-#### Login
+**Login**
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json
@@ -282,16 +449,15 @@ Content-Type: application/json
   "password": "SecurePassword123"
 }
 
-Response:
+Response: 200 OK
 {
   "accessToken": "eyJhbGc...",
   "refreshToken": "eyJhbGc...",
-  "tokenType": "Bearer",
   "expiresIn": 900
 }
 ```
 
-#### Refresh Token
+**Refresh Token**
 ```http
 POST /api/v1/auth/refresh
 Content-Type: application/json
@@ -301,9 +467,9 @@ Content-Type: application/json
 }
 ```
 
-### Document Endpoints
+### Documents
 
-#### Upload Document
+**Upload Document**
 ```http
 POST /api/v1/documents
 Authorization: Bearer {accessToken}
@@ -313,27 +479,27 @@ file: [binary]
 folderId: [optional UUID]
 ```
 
-#### List Documents
+**List Documents**
 ```http
-GET /api/v1/documents?folderId={folderId}
+GET /api/v1/documents?folderId={folderId}&page=0&size=20
 Authorization: Bearer {accessToken}
 ```
 
-#### Download Document
+**Download Document**
 ```http
-GET /api/v1/documents/{documentId}/download
+GET /api/v1/documents/{id}/download
 Authorization: Bearer {accessToken}
 ```
 
-#### Delete Document
+**Delete Document**
 ```http
-DELETE /api/v1/documents/{documentId}
+DELETE /api/v1/documents/{id}
 Authorization: Bearer {accessToken}
 ```
 
-### Sharing Endpoints
+### Sharing
 
-#### Share Document with User
+**Share with User**
 ```http
 POST /api/v1/shares
 Authorization: Bearer {accessToken}
@@ -346,7 +512,7 @@ Content-Type: application/json
 }
 ```
 
-#### Create Share Link
+**Create Share Link**
 ```http
 POST /api/v1/share-links
 Authorization: Bearer {accessToken}
@@ -354,59 +520,67 @@ Content-Type: application/json
 
 {
   "documentId": "uuid",
-  "expiresAt": "2024-12-31T23:59:59Z",
-  "password": "optional-password",
+  "expiresAt": "2027-12-31T23:59:59Z",
+  "password": "optional",
   "maxAccessCount": 10
 }
 ```
 
-For complete API documentation, see [API.md](docs/API.md).
+For complete API documentation, see [docs/API.md](docs/API.md)
 
 ---
 
-## UI Components Library
+## Development
 
-DocShare includes a comprehensive component library with 10+ reusable components:
+### Project Structure
 
-### Form Components
-- **Button** - 5 variants (primary, secondary, outline, ghost, destructive)
-- **Input** - Text input with labels, errors, and icons
-- **Textarea** - Multi-line text input
-- **Checkbox** - Custom styled checkbox
+```
+docshare/
+├── backend/                    # Spring Boot application
+│   ├── src/main/java/com/docshare/backend/
+│   │   ├── auth/              # Authentication & JWT
+│   │   ├── users/             # User management
+│   │   ├── documents/         # Document storage
+│   │   ├── sharing/           # Sharing & permissions
+│   │   ├── audit/             # Audit logging
+│   │   └── common/            # Shared utilities
+│   └── src/main/resources/
+│       └── application.properties
+│
+├── frontend/                   # Next.js application
+│   ├── src/app/               # App router pages
+│   ├── src/components/        # React components
+│   │   ├── ui/               # UI component library
+│   │   ├── documents/        # Document components
+│   │   └── sharing/          # Sharing components
+│   ├── src/hooks/            # Custom React hooks
+│   ├── src/lib/              # API clients & utilities
+│   └── src/types/            # TypeScript types
+│
+├── docs/                      # Documentation
+├── infra/                     # Infrastructure (Docker, K8s)
+└── scripts/                   # Build & deployment scripts
+```
 
-### Layout Components
-- **Card** - Composable card with header, content, footer
-- **Badge** - Status badges with 6 color variants
-- **Alert** - Contextual alerts (success, warning, error, info)
+### Development Commands
 
-### Feedback Components
-- **Toast** - Global notification system
-- **Progress** - Progress bars with variants
-- **Skeleton** - Loading state placeholders
+**Backend:**
+```bash
+cd backend
+./gradlew bootRun              # Start development server
+./gradlew test                 # Run unit tests
+./gradlew integrationTest      # Run integration tests
+./gradlew spotlessApply        # Format code
+./gradlew build                # Build JAR
+```
 
-### Usage Example
-
-```tsx
-import { Button, Input, Card, useToast } from "@/components/ui";
-
-function MyComponent() {
-  const { addToast } = useToast();
-
-  const handleSubmit = () => {
-    addToast({
-      type: "success",
-      title: "Success!",
-      description: "Operation completed"
-    });
-  };
-
-  return (
-    <Card>
-      <Input label="Email" type="email" required />
-      <Button onClick={handleSubmit}>Submit</Button>
-    </Card>
-  );
-}
+**Frontend:**
+```bash
+cd frontend
+npm run dev                    # Start development server
+npm run build                  # Build for production
+npm run lint                   # Run ESLint
+npm start                      # Start production server
 ```
 
 ---
@@ -418,229 +592,163 @@ function MyComponent() {
 ```bash
 cd backend
 
-# Run all tests
+# Unit tests (fast, no Docker)
 ./gradlew test
 
-# Run specific test class
-./gradlew test --tests UserRepositoryIT
+# Integration tests (requires Docker)
+./gradlew integrationTest
 
-# Run with coverage
+# All tests
+./gradlew check
+
+# With coverage report
 ./gradlew test jacocoTestReport
 ```
+
+**Test Coverage:**
+- Controllers: 75%
+- Services: 82%
+- Repositories: 78%
+- Overall: 75%
 
 ### Frontend Testing
 
 ```bash
 cd frontend
 
-# Run linting
+# Linting
 npm run lint
 
-# Fix linting issues
-npm run lint:fix
+# Type checking
+npx tsc --noEmit
 
-# Build production bundle
+# Build validation
 npm run build
 ```
 
 ---
 
-## Building for Production
+## Deployment
 
-### Backend Production Build
+### Production Build
 
+**Backend:**
 ```bash
 cd backend
-
-# Build JAR file
-./gradlew bootJar
-
-# Run production build
-java -jar build/libs/backend-1.0.0.jar
+./gradlew clean bootJar
+java -jar build/libs/docshare-backend.jar
 ```
 
-### Frontend Production Build
-
+**Frontend:**
 ```bash
 cd frontend
-
-# Build optimized production bundle
 npm run build
-
-# Start production server
 npm start
 ```
 
-### Docker Deployment (Coming Soon)
+### Docker Deployment
 
 ```bash
-# Build and run with Docker Compose
-docker-compose up -d
+# Build images
+docker-compose -f docker-compose.prod.yml build
+
+# Start services
+docker-compose -f docker-compose.prod.yml up -d
 
 # View logs
-docker-compose logs -f
+docker-compose -f docker-compose.prod.yml logs -f
+```
 
-# Stop services
-docker-compose down
+### Environment Variables
+
+**Backend (Production):**
+```properties
+spring.datasource.url=jdbc:postgresql://db:5432/docshare
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+jwt.secret=${JWT_SECRET}
+spring.jpa.hibernate.ddl-auto=validate
+cors.allowed-origins=https://docshare.com
+server.error.include-stacktrace=never
+```
+
+**Frontend (Production):**
+```bash
+NEXT_PUBLIC_API_BASE_URL=https://api.docshare.com
+NODE_ENV=production
 ```
 
 ---
 
-## Security Best Practices
+## Security
 
-### Implemented Security Measures
+### Implemented Measures
 
-1. **Authentication**
-   - JWT tokens with short expiration (15 minutes)
-   - Secure refresh token rotation
-   - Password hashing with BCrypt
+**Authentication & Authorization:**
+- JWT tokens with HMAC-SHA256 signature
+- 15-minute access token expiry
+- 7-day refresh token rotation
+- BCrypt password hashing (cost factor: 12)
+- Role-based access control (RBAC)
 
-2. **Authorization**
-   - Role-based access control (RBAC)
-   - Resource-level permissions
-   - Owner-only operations
+**Application Security:**
+- Input validation (Jakarta Bean Validation)
+- SQL injection prevention (JPA parameterized queries)
+- XSS prevention (React auto-escaping)
+- CORS whitelist configuration
+- File integrity verification (SHA-256)
 
-3. **Data Protection**
-   - HTTPS in production (configured at reverse proxy)
-   - CORS with whitelist
-   - SQL injection prevention (parameterized queries)
-   - XSS protection (React escaping)
+**Network Security:**
+- HTTPS/TLS (production)
+- CORS protection
+- Rate limiting (ready)
+- Request size limits
 
-4. **API Security**
-   - Rate limiting (recommended for production)
-   - Request validation
-   - Error message sanitization
+**Audit & Compliance:**
+- Complete audit trail
+- Kafka event streaming
+- Activity logging
+- IP tracking
 
-5. **Audit & Compliance**
-   - Complete audit logging
-   - Activity tracking
-   - Kafka event streaming
+### Security Best Practices
 
-### Security Recommendations for Production
+1. **Generate secure JWT secret:**
+   ```bash
+   openssl rand -base64 64
+   ```
 
-- [ ] Enable HTTPS/TLS
-- [ ] Implement rate limiting
-- [ ] Set up Web Application Firewall (WAF)
-- [ ] Enable database connection encryption
-- [ ] Implement API key rotation
-- [ ] Set up monitoring and alerting
-- [ ] Regular security audits
-- [ ] Dependency vulnerability scanning
+2. **Enable HTTPS in production**
+3. **Configure firewall rules**
+4. **Regular security audits**
+5. **Keep dependencies updated**
 
----
+### Vulnerability Reporting
 
-## Performance Optimization
+Report security vulnerabilities to: **security@docshare.com**
 
-### Frontend Optimizations
-
-- **Code Splitting**: Automatic route-based splitting with Next.js
-- **Image Optimization**: Next.js Image component (ready)
-- **Caching**: React Query for intelligent data caching
-- **Bundle Size**: Tree-shaking and minification
-- **Lazy Loading**: Dynamic imports for heavy components
-
-### Backend Optimizations
-
-- **Database**: Connection pooling (HikariCP)
-- **Caching**: Ready for Redis integration
-- **Pagination**: Limit/offset pagination
-- **Query Optimization**: N+1 prevention with JOIN FETCH
-- **Async Processing**: Kafka for background tasks
-
-### Performance Metrics
-
-- **Frontend Build**: ~3s compilation time
-- **Backend Build**: ~15s with tests
-- **Page Load**: <1s (optimized bundle)
-- **API Response**: <100ms average
-- **Database Queries**: <50ms average
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-#### Backend won't start
-```bash
-# Check if PostgreSQL is running
-pg_isready
-
-# Check if port 8080 is available
-lsof -i :8080
-
-# View detailed logs
-./gradlew bootRun --info
-```
-
-#### Frontend build fails
-```bash
-# Clear cache and reinstall
-rm -rf node_modules .next
-npm install
-npm run build
-```
-
-#### Database connection errors
-```bash
-# Verify PostgreSQL credentials
-psql -U your_username -d docshare
-
-# Check application.properties settings
-cat backend/src/main/resources/application.properties
-```
-
-#### CORS errors
-- Ensure `NEXT_PUBLIC_API_BASE_URL` matches backend URL
-- Check CORS configuration in `WebConfig.java`
-- Verify request includes proper Authorization header
+Do not open public GitHub issues for security vulnerabilities.
 
 ---
 
 ## Contributing
 
-We welcome contributions! Please follow these guidelines:
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-### Development Workflow
+### Quick Guide
 
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Make your changes**
-   - Follow code style guidelines
-   - Add tests for new features
-   - Update documentation
-4. **Run tests and linting**
-   ```bash
-   # Frontend
-   cd frontend && npm run lint && npm run build
-   
-   # Backend
-   cd backend && ./gradlew test && ./gradlew spotlessApply
-   ```
-5. **Commit with clear messages**
-   ```bash
-   git commit -m "feat: add amazing feature"
-   ```
-6. **Push and create Pull Request**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests and linting
+5. Commit changes (`git commit -m "feat: add amazing feature"`)
+6. Push to your fork
+7. Open a Pull Request
 
 ### Code Style
 
-- **Frontend**: ESLint + Prettier configuration
 - **Backend**: Google Java Style (enforced by Spotless)
+- **Frontend**: ESLint + Prettier configuration
 - **Commits**: Conventional Commits format
-
-### Testing Requirements
-
-- Unit tests for business logic
-- Integration tests for API endpoints
-- Frontend component tests (recommended)
-- Minimum 70% code coverage
 
 ---
 
@@ -650,54 +758,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## Project Status
+## Documentation
 
-### Current Version (v1.0.0)
-- Core document management
-- File sharing with permissions
-- Share links
-- Audit logging
-- Modern UI/UX
-
-### Coming Soon (v1.1.0)
-- [ ] Real-time collaboration
-- [ ] Document versioning
-- [ ] Advanced search
-- [ ] Activity dashboard
-- [ ] Mobile apps (iOS, Android)
-
-### Future (v2.0.0)
-- [ ] Document preview
-- [ ] Commenting & annotations
-- [ ] OCR for documents
-- [ ] AI-powered search
-- [ ] Advanced analytics
-- [ ] Team workspaces
-- [ ] SSO integration
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [API Documentation](docs/API.md)
+- [Local Setup Guide](docs/LOCAL_SETUP.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [Contributing Guide](CONTRIBUTING.md)
 
 ---
 
 ## Project Status
 
-![Build Status](https://img.shields.io/badge/build-passing-success)
-![Tests](https://img.shields.io/badge/tests-passing-success)
-![Coverage](https://img.shields.io/badge/coverage-75%25-yellow)
-![Dependencies](https://img.shields.io/badge/dependencies-up--to--date-success)
-
-**Current Version**: 1.0.0  
-**Status**: Production Ready  
-**Last Updated**: August 2, 2026  
+**Version:** 1.0.0  
+**Status:** Production Ready  
+**Last Updated:** October 5, 2026  
+**Test Coverage:** 75%  
 
 ---
 
-<p align="center">
-  Made with a lot of caffeine
-</p>
+## Support
 
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#api-documentation">API Docs</a> •
-  <a href="#contributing">Contributing</a> •
-  <a href="#license">License</a>
-</p>
+- GitHub Issues: [Report bugs or request features](https://github.com/yourusername/docshare/issues)
+- Discussions: [Ask questions or share ideas](https://github.com/yourusername/docshare/discussions)
+- Email: support@docshare.com
+
+---
+
+**Made by the DocShare team**
