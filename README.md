@@ -781,8 +781,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - GitHub Issues: [Report bugs or request features](https://github.com/yourusername/docshare/issues)
 - Discussions: [Ask questions or share ideas](https://github.com/yourusername/docshare/discussions)
-- Email: support@docshare.com
+- Email: hassanrj245@gmail.com
 
 ---
 
-**Made by the DocShare team**
+**Made with lot of coffee**
